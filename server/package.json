@@ -1,0 +1,33 @@
+{
+	"name": "covoiturage_periurbain",
+	"version": "1.0.0",
+	"description": "Projet thématique pour le Master 2 Informatique à l'UPJV",
+	"main": "main.js",
+	"type": "module",
+	"scripts": {
+		"start": "node main.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+ssh://git@github.com/auroreLeclerc/Covoiturage_periurbain.git"
+	},
+	"author": "auroreLeclerc <aurore.leclerc.lefranc@outlook.fr>",
+	"license": "GPL-3.0-or-later",
+	"bugs": {
+		"url": "https://github.com/auroreLeclerc/Covoiturage_periurbain/issues"
+	},
+	"homepage": "https://github.com/auroreLeclerc/Covoiturage_periurbain#readme",
+	"devDependencies": {
+		"@tsconfig/node18": "^18.2.2",
+		"@tsconfig/recommended": "^1.0.3",
+		"@types/node": "^20.7.0",
+		"@typescript-eslint/eslint-plugin": "^6.7.3",
+		"@typescript-eslint/parser": "^6.7.3",
+		"eslint": "^8.50.0",
+		"express": "^4.18.2",
+		"typescript": "^5.2.2"
+	},
+	"dependencies": {
+		"mariadb": "^3.2.1"
+	}
+}

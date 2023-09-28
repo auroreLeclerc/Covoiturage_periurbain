@@ -1,0 +1,10 @@
+{
+	"extends": "@tsconfig/node18/tsconfig.json",
+	"checkJS": true,
+	"resolveJsonModule": true,
+	"compilerOptions": {
+		"sourceMap": true,
+		"outDir": "./src/transpiler"
+	},
+	"exclude": [ "node_modules" ]
+}

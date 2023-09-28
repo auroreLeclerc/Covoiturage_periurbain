@@ -1,0 +1,13 @@
+{
+	"main": {
+		"server": {
+			"hostname": "localhost",
+			"port": 4443
+		},
+		"database": {
+			"host": "localhost",
+			"user": "user",
+			"password": "user"
+		}
+	}
+}
