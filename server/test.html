@@ -5,18 +5,54 @@
 		<meta charset="UTF-8">
 	</head>
 	<body>
+		<header>
+			<figure>
+				<img src="https://http.cat/100.jpg" alt="HTTP Error" height="400"/>
+				<figcaption>N/A</figcaption>
+			</figure>
+		</header>
 		<section>
-			<form action="https://localhost:4443" method="post">
+			<form action="https://localhost:4443/account" class="put">
 				<p>Create account</p>
+				<input type="email" name="mail" value="aurore.leclerc@etud.u-picardie.fr">
 				<input type="text" name="name" value="Aurore">
 				<input type="text" name="surname" value="Leclerc">
+				<input type="text" name="password" value="password">
 				<select name="role">
 					<option value="passenger">passenger</option>
 					<option value="driver">driver</option>
 				</select>
 				<input type="text" name="town" value="Albert">
 				<input type="submit" value="Submit">
-			  </form>
+			</form>
+			<form action="https://localhost:4443/account" class="post">
+				<p>Get account</p>
+				<input type="email" name="mail" value="aurore.leclerc@etud.u-picardie.fr">
+				<input type="text" name="password" value="password">
+				<input type="submit" value="Submit">
+			</form>
 		</section>
+		<script>
+			for (const form of document.getElementsByTagName("form")) {
+				form.addEventListener('submit', async function(event) {
+					event.preventDefault();
+					const formData = new FormData(this);
+					fetch(form.action, {
+						method: form.classList[0],
+						body: new URLSearchParams(formData).toString()
+					}).then(async response => {
+						document.getElementsByTagName("img")[0].src = `https://http.cat/${response.status}.jpg`;
+						if (response.ok) {
+							document.getElementsByTagName("figcaption")[0].textContent = await response.text();
+						} else {
+							document.getElementsByTagName("figcaption")[0].textContent = `⚠️ ${await response.text()} ⚠️`;
+						}
+					}).catch(error => {
+						document.getElementsByTagName("img")[0].src = "https://http.cat/521.jpg";
+						document.getElementsByTagName("figcaption")[0].textContent = `⛔ ${error} ⛔`;
+					});
+ 				});
+			}
+		</script>
 	</body>
 </html>

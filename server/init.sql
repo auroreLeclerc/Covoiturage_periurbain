@@ -17,10 +17,11 @@ CREATE TABLE profile (
 	`role` ENUM("driver", "passenger") NOT NULL,
 	`surname` text NOT NULL DEFAULT "N/A",
 	`name` text NOT NULL DEFAULT "N/A",
+	`mail` text NOT NULL UNIQUE DEFAULT "N/A",
+	`password` text NOT NULL,
 	`travel_id` int DEFAULT NULL REFERENCES travel(id),
 	`town` text NOT NULL DEFAULT "N/A",
 	`phone` text DEFAULT NULL,
-	`mail` text DEFAULT NULL,
 	`registration` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`banned` boolean NOT NULL DEFAULT false
 );
