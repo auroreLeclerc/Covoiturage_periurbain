@@ -5,34 +5,94 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'dart:math';
+import 'package:firebase_core/firebase_core.dart';
 
 import './account.dart'; // page de compte
+import 'auth_helper.dart';
+
 
 void main() async {
-  runApp(Application());
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(MaterialApp(
+    home: Application(),
+  ));
 }
 
-class Application extends StatelessWidget {
+
+class Application extends StatefulWidget {
+  const Application({Key? key}) : super(key: key);
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Navette',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: HomePage(),
-    );
-  }
+  State<Application> createState() => ApplicationAccueil();
 }
 
-class HomePage extends StatelessWidget {
+class ApplicationAccueil extends State<Application> {
+
+  Map<String, dynamic>? _userData;
+  AccessToken? _accessToken;
+  bool _checking = true;
+
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _checkIfisLoggedIn();
+  }
+
   final List<String> ecoPhrases = [
     'Protégeons la planète ensemble !',
     'Faisons un pas vers un avenir plus vert.',
     'Réduisons notre empreinte carbone.',
     // Ajoutez d'autres phrases écologiques ici...
   ];
+
+  _checkIfisLoggedIn() async {
+    final accessToken = await FacebookAuth.instance.accessToken;
+
+    setState(() {
+      _checking = false;
+    });
+
+    if (accessToken != null) {
+      print(accessToken.toJson());
+      final userData = await FacebookAuth.instance.getUserData();
+      _accessToken = accessToken;
+      setState(() {
+        _userData = userData;
+      });
+    } else {
+      _login();
+    }
+  }
+
+  _login() async {
+    final LoginResult result = await FacebookAuth.instance.login();
+
+    if (result.status == LoginStatus.success) {
+      _accessToken = result.accessToken;
+
+      final userData = await FacebookAuth.instance.getUserData();
+      _userData = userData;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => AccountDetailsPage(_userData!)),
+      );
+    } else {
+      print(result.status);
+      print(result.message);
+    }
+    setState(() {
+      _checking = false;
+    });
+  }
+
+  Future<void> logout() async {
+    await FacebookAuth.instance.logOut();
+    _accessToken = null;
+    _userData = null;
+    setState(() {});
+  }
+
 
   Future<UserCredential?> signInWithGoogle() async {
     try {
@@ -50,22 +110,12 @@ class HomePage extends StatelessWidget {
     }
   }
 
-  Future<UserCredential?> signInWithFacebook() async {
-    try {
-      final LoginResult result = await FacebookAuth.instance.login();
-      if (result.status != LoginStatus.success) return null;
-      final credential = FacebookAuthProvider.credential(result.accessToken!.token);
-      return await FirebaseAuth.instance.signInWithCredential(credential);
-    } catch (e) {
-      print('Failed to sign in with Facebook: $e');
-      return null;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final randomPhrase = ecoPhrases[Random().nextInt(ecoPhrases.length)];
-
+    print("Démarrage");
+    print(_userData);
     return Scaffold(
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
@@ -117,7 +167,7 @@ class HomePage extends StatelessWidget {
                   Buttons.Facebook,
                   text: "Connecter avec Facebook",
                   onPressed: () {
-                    signInWithFacebook();
+                    _login();
                   },
                 ),
                 SignInButton(
@@ -181,7 +231,7 @@ class HomePage extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => AccountDetailsPage()),
+                      MaterialPageRoute(builder: (context) => AccountDetailsPage(_userData!)),
                     );
                   },
                   child: Text('DEV'),
@@ -197,4 +247,6 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
+
+
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "27106909337",
+    "project_id": "navette-ace86",
+    "storage_bucket": "navette-ace86.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:27106909337:android:212dff035217986e1dac08",
+        "android_client_info": {
+          "package_name": "com.UPJV.application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACdn0rW1X3pDVbJEsULE73hMUh3Q7EQXw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
