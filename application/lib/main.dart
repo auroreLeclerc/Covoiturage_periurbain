@@ -6,7 +6,6 @@ import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'dart:math';
 import 'package:firebase_core/firebase_core.dart';
-
 import './account.dart'; // page de compte
 import 'auth_helper.dart';
 
@@ -103,7 +102,24 @@ class ApplicationAccueil extends State<Application> {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      return await FirebaseAuth.instance.signInWithCredential(credential);
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+      // Stocker les informations d'utilisateur dans _userData
+      setState(() {
+        _userData = {
+          'name': userCredential.user?.displayName,
+          'email': userCredential.user?.email,
+          // ... autres informations d'utilisateur
+        };
+      });
+
+      // Naviguer vers la page de compte après la connexion
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => AccountDetailsPage(_userData!)),
+      );
+
+      return userCredential;
     } catch (e) {
       print('Failed to sign in with Google: $e');
       return null;

@@ -20,6 +20,13 @@ class AccountDetailsPage extends StatelessWidget {
     );
   }
 
+  String? getPictureUrl(Map<String, dynamic> userData) {
+    try {
+      return userData['picture']['data']['url'] as String?;
+    } catch (e) {
+      return null;
+    }
+  }
 
 
 
@@ -40,20 +47,27 @@ class AccountDetailsPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-            CircleAvatar(
-            radius: 50,
-            backgroundImage: NetworkImage(userData['picture']['data']['url']),
-          ),
+              CircleAvatar(
+                radius: 50,
+                backgroundImage: (getPictureUrl(userData) != null)
+                    ? NetworkImage(getPictureUrl(userData)!)
+                    : null,
+              ),
           SizedBox(height: 20),
           Text(
             'Informations perso',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Prénom',
+                  hintText: (userData['name'] == null || userData['name'].isEmpty) ? '' : userData['name'],
+                ),
+              ),
           TextField(
-            decoration: InputDecoration(labelText: 'Prénom', hintText: userData['name']),
+            decoration: InputDecoration(labelText: 'Email',
+                hintText: (userData['email'] == null || userData['email'].isEmpty) ? '' : userData['email'],
           ),
-          TextField(
-            decoration: InputDecoration(labelText: 'Email', hintText: userData['email']),
           ),
             TextField(
               decoration: InputDecoration(labelText: 'Numéro de téléphone'),
