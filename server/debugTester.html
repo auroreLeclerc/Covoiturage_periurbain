@@ -3,6 +3,7 @@
 	<head>
 		<title>SERVER TESTER</title>
 		<meta charset="UTF-8">
+		<link rel="icon" type="image/jpg" href="https://http.cat/426.jpg">
 	</head>
 	<body>
 		<header>
@@ -49,7 +50,7 @@
 						}
 					}).catch(error => {
 						document.getElementsByTagName("img")[0].src = "https://http.cat/521.jpg";
-						document.getElementsByTagName("figcaption")[0].textContent = `⛔ ${error} ⛔`;
+						document.getElementsByTagName("figcaption")[0].textContent = `⛔ ${error} (you may need to go accept HTTPS certificate on the server page)⛔`;
 					});
  				});
 			}

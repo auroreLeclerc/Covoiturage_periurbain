@@ -13,11 +13,10 @@ CREATE TABLE travel (
 );
 
 CREATE TABLE profile (
-	`id` int NOT NULL UNIQUE AUTO_INCREMENT PRIMARY KEY,
 	`role` ENUM("driver", "passenger") NOT NULL,
 	`surname` text NOT NULL DEFAULT "N/A",
 	`name` text NOT NULL DEFAULT "N/A",
-	`mail` text NOT NULL UNIQUE DEFAULT "N/A",
+	`mail` VARCHAR(320) NOT NULL PRIMARY KEY,
 	`password` text NOT NULL,
 	`travel_id` int DEFAULT NULL REFERENCES travel(id),
 	`town` text NOT NULL DEFAULT "N/A",
@@ -27,12 +26,12 @@ CREATE TABLE profile (
 );
 
 CREATE TABLE driver (
-	`id` int REFERENCES profile(id) ON DELETE CASCADE,
+	`mail` VARCHAR(320) REFERENCES profile(mail) ON DELETE CASCADE,
 	`passengers` int DEFAULT 0,
 	`numberplate` text NOT NULL DEFAULT "XX-000-XX"
 );
 
 CREATE TABLE passenger (
-	`id` int REFERENCES profile(id) ON DELETE CASCADE,
+	`mail` VARCHAR(320) REFERENCES profile(mail) ON DELETE CASCADE,
 	`travelling`boolean DEFAULT false
 );
