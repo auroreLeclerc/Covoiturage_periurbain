@@ -1,6 +1,5 @@
 {
 	"main": {
-		"debug": true,
 		"server": {
 			"hostname": "localhost",
 			"port": 4443

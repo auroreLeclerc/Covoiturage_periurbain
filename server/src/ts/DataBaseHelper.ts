@@ -57,7 +57,7 @@ export class DataBaseHelper {
 				message: "Created"
 			};
 		}).catch(error => {
-			console.error(error);
+			console.error(error.sqlMessage);
 			switch (error.code) {
 			case "ER_BAD_NULL_ERROR":
 				return {
@@ -96,7 +96,7 @@ export class DataBaseHelper {
 				};
 			}
 		}).catch(error => {
-			console.error(error);
+			console.error(error.sqlMessage);
 			switch (error.code) {
 			case "ER_BAD_NULL_ERROR":
 				return {
