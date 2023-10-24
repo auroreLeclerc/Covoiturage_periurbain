@@ -58,8 +58,6 @@ class ApplicationAccueil extends State<Application> {
       setState(() {
         _userData = userData;
       });
-    } else {
-      _login();
     }
   }
 
