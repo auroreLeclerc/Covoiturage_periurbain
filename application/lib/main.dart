@@ -13,7 +13,7 @@ import 'auth_helper.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(MaterialApp(
+  runApp(const MaterialApp(
     home: Application(),
   ));
 }
@@ -31,6 +31,7 @@ class ApplicationAccueil extends State<Application> {
   AccessToken? _accessToken;
   bool _checking = true;
 
+  @override
   void initState() {
     // TODO: implement initState
     super.initState();
@@ -134,7 +135,7 @@ class ApplicationAccueil extends State<Application> {
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
         child: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             image: DecorationImage(
               image: AssetImage('assets/fond.jpg'),
               fit: BoxFit.cover,
@@ -150,7 +151,7 @@ class ApplicationAccueil extends State<Application> {
                 ),
                 Text(
                   randomPhrase,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20.0,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -176,7 +177,7 @@ class ApplicationAccueil extends State<Application> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 SignInButton(
                   Buttons.Facebook,
                   text: "Connecter avec Facebook",
@@ -205,8 +206,8 @@ class ApplicationAccueil extends State<Application> {
                     // Implémentez la logique de connexion Navette ici
                   },
                 ),
-                SizedBox(height: 50), // Espacement entre les boutons et le texte "Pas de compte ?"
-                Text(
+                const SizedBox(height: 50), // Espacement entre les boutons et le texte "Pas de compte ?"
+                const Text(
 
                   'Pas de compte ?',
                   style: TextStyle(
@@ -236,10 +237,10 @@ class ApplicationAccueil extends State<Application> {
                   onPressed: () {
                     // Implémentez la logique d'inscription ici
                   },
-                  child: Text('Inscrivez-vous'),
                   style: ElevatedButton.styleFrom(
-                    primary: Colors.blue, // Vous pouvez changer la couleur du bouton ici
+                    backgroundColor: Colors.blue, // Vous pouvez changer la couleur du bouton ici
                   ),
+                  child: const Text('Inscrivez-vous'),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -248,10 +249,10 @@ class ApplicationAccueil extends State<Application> {
                       MaterialPageRoute(builder: (context) => AccountDetailsPage(_userData!)),
                     );
                   },
-                  child: Text('DEV'),
                   style: ElevatedButton.styleFrom(
-                    primary: Colors.blue, // Vous pouvez changer la couleur du bouton ici
+                    backgroundColor: Colors.blue, // Vous pouvez changer la couleur du bouton ici
                   ),
+                  child: const Text('DEV'),
                 ),
 
               ],

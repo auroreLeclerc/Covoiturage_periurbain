@@ -8,14 +8,14 @@ import 'auth_helper.dart';
 class AccountDetailsPage extends StatelessWidget {
   final Map<String, dynamic> userData;
 
-  AccountDetailsPage(this.userData);
+  const AccountDetailsPage(this.userData, {super.key});
 
   Future<void> signOut(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
     await logout();  // Cela devrait maintenant fonctionner
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => Application()),
+      MaterialPageRoute(builder: (context) => const Application()),
           (Route<dynamic> route) => false,
     );
   }
@@ -34,10 +34,10 @@ class AccountDetailsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Détails du Compte'),
+        title: const Text('Détails du Compte'),
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: const Icon(Icons.logout),
             onPressed: () => signOut(context),
           )
         ],
@@ -53,8 +53,8 @@ class AccountDetailsPage extends StatelessWidget {
                     ? NetworkImage(getPictureUrl(userData)!)
                     : null,
               ),
-          SizedBox(height: 20),
-          Text(
+          const SizedBox(height: 20),
+          const Text(
             'Informations perso',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
@@ -69,16 +69,16 @@ class AccountDetailsPage extends StatelessWidget {
                 hintText: (userData['email'] == null || userData['email'].isEmpty) ? '' : userData['email'],
           ),
           ),
-            TextField(
+            const TextField(
               decoration: InputDecoration(labelText: 'Numéro de téléphone'),
               keyboardType: TextInputType.phone,
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Informations bancaires',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            TextField(
+            const TextField(
               decoration: InputDecoration(labelText: 'Infos de compte'),
             ),
           ],
