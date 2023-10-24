@@ -3,6 +3,7 @@
 	<head>
 		<title>SERVER TESTER</title>
 		<meta charset="UTF-8">
+		<link rel="icon" type="image/jpg" href="https://http.cat/426.jpg">
 	</head>
 	<body>
 		<header>
@@ -26,30 +27,47 @@
 				<input type="submit" value="Submit">
 			</form>
 			<form action="https://localhost:4443/account" class="post">
-				<p>Get account</p>
+				<p>Get account connection</p>
 				<input type="email" name="mail" value="aurore.leclerc@etud.u-picardie.fr">
 				<input type="text" name="password" value="password">
 				<input type="submit" value="Submit">
 			</form>
+			<form action="https://localhost:4443/account" class="get">
+				<p>Get account</p>
+				<input type="submit" value="Submit">
+			</form>
 		</section>
 		<script>
+			let token = "";
 			for (const form of document.getElementsByTagName("form")) {
 				form.addEventListener('submit', async function(event) {
 					event.preventDefault();
 					const formData = new FormData(this);
-					fetch(form.action, {
+					const fetchBody = {
 						method: form.classList[0],
-						body: new URLSearchParams(formData).toString()
-					}).then(async response => {
+					};
+					if (form.classList[0] != "get") {
+						fetchBody.body = new URLSearchParams(formData).toString();
+					}
+					if (token) {
+						fetchBody.headers = new Headers({
+							"Authorization": token
+						});
+					}
+					fetch(form.action, fetchBody).then(async response => {
 						document.getElementsByTagName("img")[0].src = `https://http.cat/${response.status}.jpg`;
+						let text = await response.text();
 						if (response.ok) {
-							document.getElementsByTagName("figcaption")[0].textContent = await response.text();
+							document.getElementsByTagName("figcaption")[0].textContent = text;
 						} else {
-							document.getElementsByTagName("figcaption")[0].textContent = `⚠️ ${await response.text()} ⚠️`;
+							document.getElementsByTagName("figcaption")[0].textContent = `⚠️ ${text} ⚠️`;
+						}
+						if (text.startsWith("Bearer ")) {
+							token = text;
 						}
 					}).catch(error => {
 						document.getElementsByTagName("img")[0].src = "https://http.cat/521.jpg";
-						document.getElementsByTagName("figcaption")[0].textContent = `⛔ ${error} ⛔`;
+						document.getElementsByTagName("figcaption")[0].textContent = `⛔ ${error} ⛔ \n  (you may need to go accept HTTPS certificate on the server page)`;
 					});
  				});
 			}
