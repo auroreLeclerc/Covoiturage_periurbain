@@ -13,8 +13,17 @@ import 'auth_helper.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MaterialApp(
-    home: Application(),
+  runApp(MaterialApp(
+    theme: ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+    ),
+    darkTheme: ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
+    ),
+    themeMode: ThemeMode.system,
+    home: const Application(),
   ));
 }
 
@@ -237,9 +246,6 @@ class ApplicationAccueil extends State<Application> {
                   onPressed: () {
                     // Implémentez la logique d'inscription ici
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue, // Vous pouvez changer la couleur du bouton ici
-                  ),
                   child: const Text('Inscrivez-vous'),
                 ),
                 ElevatedButton(
@@ -249,9 +255,6 @@ class ApplicationAccueil extends State<Application> {
                       MaterialPageRoute(builder: (context) => AccountDetailsPage(_userData!)),
                     );
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue, // Vous pouvez changer la couleur du bouton ici
-                  ),
                   child: const Text('DEV'),
                 ),
 
