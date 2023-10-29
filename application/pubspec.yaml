@@ -1,5 +1,5 @@
-name: application
-description: A new Flutter project.
+name: covoiturage_periurbain
+description: Projet thématique de Covoiturage Periurbain n°1 de l'UPJV.
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -35,8 +35,8 @@ dependencies:
   google_sign_in: ^6.1.5
   flutter_facebook_auth: ^6.0.2
   flutter_signin_button: ^2.0.0
-  firebase_core_platform_interface: ^4.8.0
-  cloud_firestore_platform_interface : ^5.16.2
+  firebase_core_platform_interface: ^5.0.0
+  cloud_firestore_platform_interface : ^6.0.2
   http: ^1.0.0
   fluttertoast: ^8.0.7
 
@@ -44,6 +44,8 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
+  flutter_launcher_icons: ^0.13.1
+  rename: ^3.0.1
 
 dev_dependencies:
   flutter_test:
@@ -54,7 +56,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^2.0.0
+  flutter_lints: ^3.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -99,3 +101,25 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+# https://pub.dev/packages/flutter_launcher_icons
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/icon.png"
+  adaptive_icon_foreground: "assets/maskable_icon.png"
+  adaptive_icon_background: "#448AFF"
+  min_sdk_android: 28 # android min sdk min:16, default 21
+  web:
+    generate: false
+    image_path: "assets/icon.png"
+    background_color: "#448AFF"
+    theme_color: "#448AFF"
+  windows:
+    generate: false
+    image_path: "assets/icon.png"
+    icon_size: 48 # min:48, max:256, default: 48
+  macos:
+    generate: false
+    image_path: "assets/icon.png"
