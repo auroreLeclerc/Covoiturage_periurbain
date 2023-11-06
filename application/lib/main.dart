@@ -1,3 +1,4 @@
+import 'package:covoiturage_periurbain/server.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
@@ -13,23 +14,24 @@ import 'auth_helper.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(MaterialApp(
-    theme: ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
-    ),
-    darkTheme: ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
-    ),
-    themeMode: ThemeMode.system,
-    home: const Application(),
-  ));
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((_) {
+      runApp(MaterialApp(
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
+      ),
+      themeMode: ThemeMode.system,
+      home: const Application(),
+    ));
+  });  
 }
 
-
 class Application extends StatefulWidget {
-  const Application({Key? key}) : super(key: key);
+  const Application({super.key});
   @override
   State<Application> createState() => ApplicationAccueil();
 }
@@ -256,6 +258,15 @@ class ApplicationAccueil extends State<Application> {
                     );
                   },
                   child: const Text('DEV'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const MyCustomForm()),
+                    );
+                  },
+                  child: const Text('Server'),
                 ),
 
               ],
