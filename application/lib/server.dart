@@ -2,16 +2,17 @@ import "dart:convert";
 
 import "package:email_validator/email_validator.dart";
 import "package:flutter/material.dart";
+import 'package:http/http.dart' as http;
 
-class MyCustomForm extends StatefulWidget {
-  const MyCustomForm({super.key});
+class ServerDebug extends StatefulWidget {
+  const ServerDebug({super.key});
   @override
-  MyCustomFormState createState() {
-    return MyCustomFormState();
+  ServerDebugState createState() {
+    return ServerDebugState();
   }
 }
 
-class MyCustomFormState extends State<MyCustomForm> {
+class ServerDebugState extends State<ServerDebug> {
   final _formKey = GlobalKey<FormState>();
   final list = <DropdownMenuItem<String>>[
     const DropdownMenuItem(
@@ -29,20 +30,19 @@ class MyCustomFormState extends State<MyCustomForm> {
   late String password;
   late String? role = list.first.value;
   late String town;
+  late String catUrl = "https://http.cat/images/100.jpg";
 
   @override
   Widget build(BuildContext context) {
-    // Build a Form widget using the _formKey created above.
     return Scaffold(
         appBar: AppBar(
           title: const Text("Server"),
         ),
         body: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: ListView(
             children: [
-              Image.network("https://http.cat/images/100.jpg"),
+              Image.network(catUrl),
               TextFormField(
                   validator: (String? value) {
                     if (value == null || value.isEmpty) {
@@ -113,8 +113,31 @@ class MyCustomFormState extends State<MyCustomForm> {
                         "town": town
                       };
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(jsonEncode(toSend))),
+                        const SnackBar(content: Text("Sending...")),
                       );
+                      http
+                          .post(
+                        Uri.parse('https://localhost:4443/account'),
+                        headers: <String, String>{
+                          'Content-Type': 'application/json; charset=UTF-8',
+                        },
+                        body: jsonEncode(toSend),
+                      )
+                          .then((response) {
+                        setState(() {
+                          catUrl =
+                              "https://http.cat/images/${response.statusCode}.jpg";
+                        });
+                        if (response.statusCode == 201) {
+                        } else {}
+                      }).catchError((error) {
+                        setState(() {
+                          catUrl = "https://http.cat/images/521.jpg";
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(error.toString())),
+                        );
+                      });
                     }
                   },
                   child: const Text("Envoyer"),

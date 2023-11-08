@@ -10,12 +10,12 @@ import 'package:firebase_core/firebase_core.dart';
 import './account.dart'; // page de compte
 import 'auth_helper.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((_) {
-      runApp(MaterialApp(
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
+      .then((_) {
+    runApp(MaterialApp(
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
@@ -27,7 +27,7 @@ void main() async {
       themeMode: ThemeMode.system,
       home: const Application(),
     ));
-  });  
+  });
 }
 
 class Application extends StatefulWidget {
@@ -37,7 +37,6 @@ class Application extends StatefulWidget {
 }
 
 class ApplicationAccueil extends State<Application> {
-
   Map<String, dynamic>? _userData;
   AccessToken? _accessToken;
   bool _checking = true;
@@ -102,17 +101,18 @@ class ApplicationAccueil extends State<Application> {
     setState(() {});
   }
 
-
   Future<UserCredential?> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) return null;
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
 
       // Stocker les informations d'utilisateur dans _userData
       setState(() {
@@ -135,7 +135,6 @@ class ApplicationAccueil extends State<Application> {
       return null;
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -217,9 +216,10 @@ class ApplicationAccueil extends State<Application> {
                     // Implémentez la logique de connexion Navette ici
                   },
                 ),
-                const SizedBox(height: 50), // Espacement entre les boutons et le texte "Pas de compte ?"
+                const SizedBox(
+                    height:
+                        50), // Espacement entre les boutons et le texte "Pas de compte ?"
                 const Text(
-
                   'Pas de compte ?',
                   style: TextStyle(
                     color: Colors.white,
@@ -254,7 +254,8 @@ class ApplicationAccueil extends State<Application> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => AccountDetailsPage(_userData!)),
+                      MaterialPageRoute(
+                          builder: (context) => AccountDetailsPage(_userData!)),
                     );
                   },
                   child: const Text('DEV'),
@@ -263,12 +264,12 @@ class ApplicationAccueil extends State<Application> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const MyCustomForm()),
+                      MaterialPageRoute(
+                          builder: (context) => const ServerDebug()),
                     );
                   },
                   child: const Text('Server'),
                 ),
-
               ],
             ),
           ),
@@ -276,6 +277,4 @@ class ApplicationAccueil extends State<Application> {
       ),
     );
   }
-
-
 }
