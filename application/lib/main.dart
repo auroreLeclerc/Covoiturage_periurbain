@@ -213,7 +213,11 @@ class ApplicationAccueil extends State<Application> {
                   Buttons.Email,
                   text: "Connecter avec Navette",
                   onPressed: () {
-                    // Implémentez la logique de connexion Navette ici
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ServerDebug()),
+                    );
                   },
                 ),
                 const SizedBox(
@@ -259,16 +263,6 @@ class ApplicationAccueil extends State<Application> {
                     );
                   },
                   child: const Text('DEV'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const ServerDebug()),
-                    );
-                  },
-                  child: const Text('Server'),
                 ),
               ],
             ),

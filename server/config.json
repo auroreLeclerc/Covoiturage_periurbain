@@ -2,7 +2,7 @@
 	"main": {
 		"server": {
 			"secure": false,
-			"hostname": "localhost",
+			"hostname": "127.0.0.1",
 			"port": 4443
 		},
 		"database": {

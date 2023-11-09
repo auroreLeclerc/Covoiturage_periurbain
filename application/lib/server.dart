@@ -42,7 +42,7 @@ class ServerDebugState extends State<ServerDebug> {
           key: _formKey,
           child: ListView(
             children: [
-              Image.network(catUrl),
+              Image.network(catUrl, height: 200),
               TextFormField(
                   validator: (String? value) {
                     if (value == null || value.isEmpty) {
@@ -112,12 +112,9 @@ class ServerDebugState extends State<ServerDebug> {
                         "role": role.toString(),
                         "town": town
                       };
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Sending...")),
-                      );
                       http
                           .post(
-                        Uri.parse('https://localhost:4443/account'),
+                        Uri.parse('http://10.0.2.2:4443/account'),
                         headers: <String, String>{
                           'Content-Type': 'application/json; charset=UTF-8',
                         },
@@ -130,6 +127,10 @@ class ServerDebugState extends State<ServerDebug> {
                         });
                         if (response.statusCode == 201) {
                         } else {}
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(response.body))
+                        );
                       }).catchError((error) {
                         setState(() {
                           catUrl = "https://http.cat/images/521.jpg";
