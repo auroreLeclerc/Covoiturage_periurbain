@@ -1,6 +1,7 @@
 import fs from "fs";
 import config = require( "./config.json");
-import https from "https";
+import https from "node:https";
+import http from "node:http";
 import jwt from "jsonwebtoken";
 process.title = "covoiturage_periurbain_server";
 const certificates = {
@@ -14,7 +15,7 @@ import express from "express";
 import cors from "cors";
 const app = express();
   
-const httpsServer = https.createServer(certificates, app);
+const server = config.main.server.secure ? https.createServer(certificates, app) : http.createServer(app);
 
 const database = new DataBaseHelper(
 	config.main.database.host, 
@@ -32,8 +33,7 @@ declare module "jsonwebtoken" {
 database.start().then(name => {
 	console.log("🧑‍💻 mariadb", name);
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	app.use(cors(), (request, response, _next) => {
+	app.use(cors(), (request, response) => {
 		let body = "";
 
 		request.on("data", (data) => {
@@ -146,7 +146,7 @@ database.start().then(name => {
 		});
 	});
 
-	httpsServer.listen(config.main.server.port, config.main.server.hostname, () => {
-		console.log(`🧑‍💻 Listening on https://${config.main.server.hostname}:${config.main.server.port}`);
+	server.listen(config.main.server.port, config.main.server.hostname, () => {
+		console.log(`🧑‍💻 Listening on ${config.main.server.secure ? "https" : "http"}://${config.main.server.hostname}:${config.main.server.port}`);
 	});
 });

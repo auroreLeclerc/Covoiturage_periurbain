@@ -1,6 +1,7 @@
 {
 	"main": {
 		"server": {
+			"secure": false,
 			"hostname": "localhost",
 			"port": 4443
 		},
