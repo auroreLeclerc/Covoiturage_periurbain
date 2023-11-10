@@ -1,10 +1,15 @@
 import fs from "fs";
 import config = require( "./config.json");
+if (config.main.server.hostname === "localhost") console.warn("Localhost does not equal 127.0.0.1 and I don't know why. But you can see the consequences of that in AVD where 10.0.2.2 won't work.");
 import https from "node:https";
 import http from "node:http";
 import jwt from "jsonwebtoken";
 process.title = "covoiturage_periurbain_server";
-const certificates = {
+export interface Certificates {
+	key: Buffer,
+	cert: Buffer
+}
+const certificates: Certificates = {
 	key: fs.readFileSync("./src/ssl/key.pem"),
 	cert: fs.readFileSync("./src/ssl/cert.pem")
 };
@@ -40,10 +45,14 @@ database.start().then(name => {
 			body += data;
 		});
 		request.on("end", () => {
-			const posted: {[key: string]: string} = {};
-			for (const element of body.split("&")) {
-				const splited = element.split("=");
-				posted[splited[0]] = splited[1];
+			let posted: {[key: string]: string} = {};
+			try {
+				posted = JSON.parse(body);
+			} catch (error) {
+				for (const element of body.split("&")) {
+					const splited = element.split("=");
+					posted[splited[0]] = splited[1];
+				}
 			}
 
 			console.log(request.method, request.url);

@@ -113,7 +113,7 @@ class ServerDebugState extends State<ServerDebug> {
                         "town": town
                       };
                       http
-                          .post(
+                          .put(
                         Uri.parse('http://10.0.2.2:4443/account'),
                         headers: <String, String>{
                           'Content-Type': 'application/json; charset=UTF-8',
