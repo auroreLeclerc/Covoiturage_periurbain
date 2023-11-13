@@ -9,6 +9,8 @@ import 'dart:math';
 import 'package:firebase_core/firebase_core.dart';
 import './account.dart'; // page de compte
 import 'auth_helper.dart';
+import 'map_page.dart';
+import 'inscription.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -81,9 +83,10 @@ class ApplicationAccueil extends State<Application> {
       final userData = await FacebookAuth.instance.getUserData();
       _userData = userData;
 
+      // Rediriger vers MairieMapPage
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => AccountDetailsPage(_userData!)),
+        MaterialPageRoute(builder: (context) => MapPage(userData: _userData!)),
       );
     } else {
       print(result.status);
@@ -106,13 +109,13 @@ class ApplicationAccueil extends State<Application> {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) return null;
       final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
       UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithCredential(credential);
+      await FirebaseAuth.instance.signInWithCredential(credential);
 
       // Stocker les informations d'utilisateur dans _userData
       setState(() {
@@ -123,10 +126,10 @@ class ApplicationAccueil extends State<Application> {
         };
       });
 
-      // Naviguer vers la page de compte après la connexion
+      // Rediriger vers MairieMapPage
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => AccountDetailsPage(_userData!)),
+        MaterialPageRoute(builder: (context) => MapPage(userData: _userData!)),
       );
 
       return userCredential;
@@ -135,6 +138,7 @@ class ApplicationAccueil extends State<Application> {
       return null;
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -250,20 +254,14 @@ class ApplicationAccueil extends State<Application> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    // Implémentez la logique d'inscription ici
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => InscriptionForm()),
+                    );
                   },
                   child: const Text('Inscrivez-vous'),
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => AccountDetailsPage(_userData!)),
-                    );
-                  },
-                  child: const Text('DEV'),
-                ),
+
               ],
             ),
           ),
