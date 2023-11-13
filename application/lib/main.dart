@@ -1,4 +1,4 @@
-import 'package:covoiturage_periurbain/server.dart';
+import 'package:covoiturage_periurbain/account_creation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
@@ -107,20 +107,20 @@ class ApplicationAccueil extends State<Application> {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) return null;
       final GoogleSignInAuthentication googleAuth =
-      await googleUser.authentication;
+          await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
       UserCredential userCredential =
-      await FirebaseAuth.instance.signInWithCredential(credential);
+          await FirebaseAuth.instance.signInWithCredential(credential);
 
       // Stocker les informations d'utilisateur dans _userData
       setState(() {
         _userData = {
           'name': userCredential.user?.displayName,
           'email': userCredential.user?.email,
-          'id' : userCredential.user?.uid,
+          'id': userCredential.user?.uid,
         };
       });
 
@@ -136,7 +136,6 @@ class ApplicationAccueil extends State<Application> {
       return null;
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -214,9 +213,7 @@ class ApplicationAccueil extends State<Application> {
                 SignInButton(
                   Buttons.Email,
                   text: "Connecter avec Navette",
-                  onPressed: () {
-
-                  },
+                  onPressed: () {},
                 ),
                 const SizedBox(
                     height:
@@ -251,12 +248,11 @@ class ApplicationAccueil extends State<Application> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const ServerDebug()),
+                          builder: (context) => const AccountCreation()),
                     );
                   },
                   child: const Text('Inscrivez-vous'),
                 ),
-
               ],
             ),
           ),
