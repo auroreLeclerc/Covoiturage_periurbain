@@ -10,7 +10,6 @@ import 'package:firebase_core/firebase_core.dart';
 import './account.dart'; // page de compte
 import 'auth_helper.dart';
 import 'map_page.dart';
-import 'inscription.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -122,7 +121,7 @@ class ApplicationAccueil extends State<Application> {
         _userData = {
           'name': userCredential.user?.displayName,
           'email': userCredential.user?.email,
-          // ... autres informations d'utilisateur
+          'id' : userCredential.user?.uid,
         };
       });
 
@@ -217,11 +216,7 @@ class ApplicationAccueil extends State<Application> {
                   Buttons.Email,
                   text: "Connecter avec Navette",
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const ServerDebug()),
-                    );
+
                   },
                 ),
                 const SizedBox(
@@ -256,7 +251,8 @@ class ApplicationAccueil extends State<Application> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => InscriptionForm()),
+                      MaterialPageRoute(
+                          builder: (context) => const ServerDebug()),
                     );
                   },
                   child: const Text('Inscrivez-vous'),
