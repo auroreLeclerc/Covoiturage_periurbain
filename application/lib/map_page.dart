@@ -6,7 +6,7 @@ import 'account.dart'; // Assurez-vous que le chemin est correct
 class MapPage extends StatefulWidget {
   final Map<String, dynamic> userData;
 
-  MapPage({Key? key, required this.userData}) : super(key: key);
+  const MapPage({super.key, required this.userData});
 
   @override
   _MapPageState createState() => _MapPageState();
@@ -20,7 +20,7 @@ class _MapPageState extends State<MapPage> {
   void initState() {
     super.initState();
     _pages = [
-      MapContent(),
+      const MapContent(),
       AccountDetailsPage(widget.userData),
     ];
   }
@@ -38,7 +38,7 @@ class _MapPageState extends State<MapPage> {
       bottomNavigationBar: BottomNavigationBar(
         onTap: onTabTapped,
         currentIndex: _currentIndex,
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.map),
             label: 'Carte',
@@ -56,6 +56,8 @@ class _MapPageState extends State<MapPage> {
 
 
 class MapContent extends StatefulWidget {
+  const MapContent({super.key});
+
   @override
   _MapContentState createState() => _MapContentState();
 }
@@ -155,10 +157,10 @@ class _MapContentState extends State<MapContent> {
     return Column(
       children: [
         Padding(
-          padding: EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(8.0),
           child: TextField(
             controller: searchController,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Recherche',
               suffixIcon: Icon(Icons.search),
             ),
@@ -175,7 +177,7 @@ class _MapContentState extends State<MapContent> {
                 title: Text(mairiesFiltrees[index].nom),
                 subtitle: Text('Distance: ${mairiesFiltrees[index].distance.toStringAsFixed(2)} km'),
                 trailing: IconButton(
-                  icon: Icon(Icons.map),
+                  icon: const Icon(Icons.map),
                   onPressed: () {
                     _launchGoogleMaps(mairiesFiltrees[index].coordonnees);
                   },

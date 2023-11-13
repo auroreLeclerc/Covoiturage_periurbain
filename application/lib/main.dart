@@ -7,8 +7,7 @@ import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'dart:math';
 import 'package:firebase_core/firebase_core.dart';
-import './account.dart'; // page de compte
-import 'auth_helper.dart';
+// page de compte
 import 'map_page.dart';
 
 void main() async {
