@@ -13,13 +13,12 @@ CREATE TABLE travel (
 );
 
 CREATE TABLE profile (
-	`role` ENUM("driver", "passenger") NOT NULL,
-	`surname` text NOT NULL DEFAULT "N/A",
+	`role` ENUM("driver", "passenger") DEFAULT NULL,
 	`name` text NOT NULL DEFAULT "N/A",
 	`mail` VARCHAR(320) NOT NULL PRIMARY KEY,
 	`password` text NOT NULL,
 	`travel_id` int DEFAULT NULL REFERENCES travel(id),
-	`town` text NOT NULL DEFAULT "N/A",
+	`town` text DEFAULT NULL,
 	`phone` text DEFAULT NULL,
 	`registration` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`banned` boolean NOT NULL DEFAULT false

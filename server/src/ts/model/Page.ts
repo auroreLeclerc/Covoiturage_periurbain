@@ -1,15 +1,20 @@
-import express from "express";
+import http from "node:http";
 import { Certificates } from "../../../main.js";
+import { DataBaseHelper } from "../DataBaseHelper.js";
 
 export abstract class Page {
-	protected request: express.Request;
-	protected response: express.Response;
+	protected request: http.IncomingMessage;
+	protected response: http.ServerResponse;
 	protected certificates: Certificates;
+	protected database: DataBaseHelper;
+	protected posted: {[key: string]: string};
 
-	constructor(request: express.Request, response: express.Response, certificates: Certificates) {
+	constructor(request: http.IncomingMessage, response: http.ServerResponse, certificates: Certificates, database: DataBaseHelper, posted: {[key: string]: string}) {
 		this.request = request;
 		this.response = response;
 		this.certificates = certificates;
+		this.database = database;
+		this.posted = posted;
 	}
 
 	public abstract get(): void;

@@ -1,6 +1,5 @@
 {
 	"extends": "@tsconfig/node18/tsconfig.json",
-	"checkJS": true,
 	"compilerOptions": {
 		"sourceMap": true,
 		"outDir": "./src/transpiler",
