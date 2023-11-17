@@ -1,5 +1,20 @@
 import http from "node:http";
 
+export class HttpTransaction {
+	public request: http.IncomingMessage;
+	public response: http.ServerResponse;
+
+	constructor(request: http.IncomingMessage, response: http.ServerResponse) {
+		this.request = request;
+		this.response = response;
+	}
+
+	public sendStatus(statusMessage: httpCodes, additionalMessage?: string) {
+		this.response.writeHead(statusMessage, { "Content-Type": "text/plain" });
+		this.response.end(`${httpCodes[statusMessage]}${additionalMessage ? ` ; ${additionalMessage}` : ""}`);
+	}
+}
+
 export enum httpCodes {
 	"Continue" = 100,
 	"Switching Protocols" = 101,
@@ -70,9 +85,4 @@ export enum httpCodes {
 	"SSL Handshake Failed" = 525,
 	"Site Frozen" = 530,
 	"Network Connect Timeout Error" = 599,
-}
-
-export function sendStatus(response: http.ServerResponse, statusMessage: httpCodes, additionalMessage?: string) {
-	response.writeHead(statusMessage, { "Content-Type": "text/plain" });
-	response.end(`${httpCodes[statusMessage]}${additionalMessage ? ` ; ${additionalMessage}` : ""}`);
 }

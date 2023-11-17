@@ -1,17 +1,15 @@
-import http from "node:http";
 import { Certificates } from "../../../main.js";
 import { DataBaseHelper } from "../DataBaseHelper.js";
+import { HttpTransaction } from "../HttpTransaction.js";
 
 export abstract class Page {
-	protected request: http.IncomingMessage;
-	protected response: http.ServerResponse;
+	protected transaction: HttpTransaction;
 	protected certificates: Certificates;
 	protected database: DataBaseHelper;
 	protected posted: {[key: string]: string};
 
-	constructor(request: http.IncomingMessage, response: http.ServerResponse, certificates: Certificates, database: DataBaseHelper, posted: {[key: string]: string}) {
-		this.request = request;
-		this.response = response;
+	constructor(transaction: HttpTransaction, certificates: Certificates, database: DataBaseHelper, posted: {[key: string]: string}) {
+		this.transaction = transaction;
 		this.certificates = certificates;
 		this.database = database;
 		this.posted = posted;
