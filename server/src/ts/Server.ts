@@ -53,7 +53,7 @@ export class Server {
 					transaction.sendStatus(httpCodes["No Content"]);
 				}
 				else if (request.url && this.pageFileNames.indexOf(request.url.slice(1)) > -1) {
-					import(`./src/ts/model/page/${request.url.slice(1)}.js`).then(pageClass => {
+					import(`./model/page/${request.url.slice(1)}.js`).then(pageClass => {
 						const page: Page = new pageClass.default(transaction, this.certificates, this.database, posted);
 						switch (request.method) {
 						case "POST":

@@ -1,5 +1,5 @@
 import mariadb from "mariadb";
-import { httpCodes } from "./httpCodes.mjs";
+import { httpCodes } from "./HttpTransaction.js";
 
 interface HttpResponseStatusCodes {
 	code: httpCodes;
