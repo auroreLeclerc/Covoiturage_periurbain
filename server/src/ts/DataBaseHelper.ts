@@ -1,59 +1,58 @@
-import mariadb, { SqlError } from "mariadb";
+import mariadb from "mariadb";
+import { httpCodes } from "./HttpTransaction.js";
 
 interface HttpResponseStatusCodes {
-	code: number;
+	code: httpCodes;
 	message: string;
 }
 
 interface HttpResponseStatusCodesWithArrayBody extends HttpResponseStatusCodes {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	body?: any[]
+	body?: {[key: string]: unknown}[]
 }
 
 export class DataBaseHelper {
-	private pool: mariadb.Pool;
-	#connection: mariadb.PoolConnection|null = null;
+	private host: string;
+	private user: string;
+	private password: string;
+	#connection: mariadb.Connection|null = null;
 
 	private get connection() {
 		if (this.#connection) return this.#connection;
-		else throw new SqlError;
+		else throw new Error("DataBaseHelper has not been started");
 	}
 
-	private set connection(value: mariadb.PoolConnection) {
-		this.#connection = value;
+	private set connection(connection) {
+		this.#connection = connection;
 	}
 
 	constructor(host: string, user: string, password: string){
-		this.pool = mariadb.createPool({
-			host: host, 
-			user: user, 
-			password: password,
-		});
+		this.host = host;
+		this.user = user;
+		this.password = password;
 	}
 
 	/**
 	 * @throws {mariadb.SqlError} Check if the mariadb service is started or if the connection credentials are correct
 	 */
 	start(): Promise<string> {
-		return this.pool.getConnection().then(connection => {
+		return mariadb.createConnection({
+			host: this.host,
+			user: this.user,
+			password: this.password
+		}).then(connection => {
 			this.connection = connection;
 			return connection.constructor.name;
 		});
 	}
 
-	/**
-	 * @example insert("INSERT INTO dataBase.table(value1, value2, value3, value4) VALUES(?, ?, ?, ?)", [true, "value", 123, false])
-	 */
-	insert(request: string, values: unknown[]): Promise<HttpResponseStatusCodes> {
+	set(request: string, values: unknown[]): Promise<HttpResponseStatusCodes> {
 		for (let i = 0; i < values.length; i++) {
-			if (!values[i]) {
-				values[i] = null;
-			}
+			values[i] = values[i] ?? null;
 		}
-		return this.pool.batch(request, values).then(result => {
+		return this.connection.query(request, values).then(result => {
 			console.log(result);
 			return {
-				code: 201,
+				code: httpCodes.Created,
 				message: "Created"
 			};
 		}).catch(error => {
@@ -61,37 +60,37 @@ export class DataBaseHelper {
 			switch (error.code) {
 			case "ER_BAD_NULL_ERROR":
 				return {
-					code: 400,
+					code: httpCodes["Bad Request"],
 					message: error.sqlMessage
 				};
 
 			case "ER_DUP_ENTRY":
 				return {
-					code: 409,
+					code: httpCodes.Conflict,
 					message: error.sqlMessage
 				};
 				
 			default:
 				return {
-					code: 406,
+					code: httpCodes["Not Acceptable"],
 					message: error.sqlMessage
 				};
 			}
 		});
 	}
 
-	select(request: string, values: unknown[]): Promise<HttpResponseStatusCodesWithArrayBody> {
+	get(request: string, values: unknown[]): Promise<HttpResponseStatusCodesWithArrayBody> {
 		return this.connection.query(request, values).then(rows => {
 			if (Array.isArray(rows)) {
 				return {
-					code: 200,
+					code: httpCodes.OK,
 					message: "Success",
 					body: rows
 				};
 			}
 			else {
 				return {
-					code: 530,
+					code: httpCodes["Site Frozen"],
 					message: "FIXME: Database mishap"
 				};
 			}
@@ -100,13 +99,13 @@ export class DataBaseHelper {
 			switch (error.code) {
 			case "ER_BAD_NULL_ERROR":
 				return {
-					code: 400,
+					code: httpCodes["Bad Request"],
 					message: error.sqlMessage
 				};
 
 			default:
 				return {
-					code: 406,
+					code: httpCodes["Not Acceptable"],
 					message: error.sqlMessage
 				};
 			}

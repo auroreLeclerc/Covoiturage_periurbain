@@ -4,15 +4,15 @@ import "package:email_validator/email_validator.dart";
 import "package:flutter/material.dart";
 import 'package:http/http.dart' as http;
 
-class ServerDebug extends StatefulWidget {
-  const ServerDebug({super.key});
+class AccountCreation extends StatefulWidget {
+  const AccountCreation({super.key});
   @override
-  ServerDebugState createState() {
-    return ServerDebugState();
+  AccountCreationState createState() {
+    return AccountCreationState();
   }
 }
 
-class ServerDebugState extends State<ServerDebug> {
+class AccountCreationState extends State<AccountCreation> {
   final _formKey = GlobalKey<FormState>();
   final list = <DropdownMenuItem<String>>[
     const DropdownMenuItem(
@@ -126,11 +126,11 @@ class ServerDebugState extends State<ServerDebug> {
                               "https://http.cat/images/${response.statusCode}.jpg";
                         });
                         if (response.statusCode == 201) {
+                          // TODO: créer un compte avec mail/name/password puis créer une page pour ajouter le reste des informations
                         } else {}
 
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(response.body))
-                        );
+                            SnackBar(content: Text(response.body)));
                       }).catchError((error) {
                         setState(() {
                           catUrl = "https://http.cat/images/521.jpg";

@@ -13,12 +13,21 @@
 			</figure>
 		</header>
 		<section>
-			<form action="https://localhost:4443/account" class="put">
+			<form action="https://127.0.0.1:4443/account" class="put">
 				<p>Create account</p>
 				<input type="email" name="mail" value="aurore.leclerc@etud.u-picardie.fr">
 				<input type="text" name="name" value="Aurore">
-				<input type="text" name="surname" value="Leclerc">
 				<input type="text" name="password" value="password">
+				<input type="submit" value="Submit">
+			</form>
+			<form action="https://127.0.0.1:4443/account" class="post">
+				<p>Get account connection</p>
+				<input type="email" name="mail" value="aurore.leclerc@etud.u-picardie.fr">
+				<input type="text" name="password" value="password">
+				<input type="submit" value="Submit">
+			</form>
+			<form action="https://127.0.0.1:4443/account" class="patch">
+				<p>Update account</p>
 				<select name="role">
 					<option value="passenger">passenger</option>
 					<option value="driver">driver</option>
@@ -26,13 +35,7 @@
 				<input type="text" name="town" value="Albert">
 				<input type="submit" value="Submit">
 			</form>
-			<form action="https://localhost:4443/account" class="post">
-				<p>Get account connection</p>
-				<input type="email" name="mail" value="aurore.leclerc@etud.u-picardie.fr">
-				<input type="text" name="password" value="password">
-				<input type="submit" value="Submit">
-			</form>
-			<form action="https://localhost:4443/account" class="get">
+			<form action="https://127.0.0.1:4443/account" class="get">
 				<p>Get account</p>
 				<input type="submit" value="Submit">
 			</form>
@@ -44,7 +47,7 @@
 					event.preventDefault();
 					const formData = new FormData(this);
 					const fetchBody = {
-						method: form.classList[0],
+						method: form.classList[0].toUpperCase(), // https://www.reddit.com/r/node/comments/i5u4m3/comment/g0rpn67/?utm_source=share&utm_medium=web2x&context=3
 					};
 					if (form.classList[0] != "get") {
 						fetchBody.body = new URLSearchParams(formData).toString();
