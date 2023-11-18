@@ -7,6 +7,11 @@ import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'dart:math';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_blue/flutter_blue.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'dart:async';
+import 'package:permission_handler/permission_handler.dart';
+
 import './account.dart'; // page de compte
 import 'auth_helper.dart';
 import 'map_page.dart';
@@ -31,22 +36,132 @@ void main() async {
   });
 }
 
+
+
 class Application extends StatefulWidget {
+
+
   const Application({super.key});
   @override
   State<Application> createState() => ApplicationAccueil();
+
 }
+
 
 class ApplicationAccueil extends State<Application> {
   Map<String, dynamic>? _userData;
   AccessToken? _accessToken;
   bool _checking = true;
+  FlutterLocalNotificationsPlugin fltrNotification = FlutterLocalNotificationsPlugin();
+  Timer? _cooldownTimer;
+  FlutterBlue flutterBlue = FlutterBlue.instance;
+  Timer? _scanTimer;
+
+
+  // Définition de la liste des conducteurs
+  final List<Map<String, String>> defaultConducteurListe = [
+    {"id": "491", "MAC": "D5:3E:21:C4:23:D0"},
+    {"id": "494", "MAC": "D5:05:C9:41:03:89"}
+  ];
+
+  void requestPermissions() async {
+    await [
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect, // Ajoutez cette ligne
+      Permission.location,
+    ].request();
+  }
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    _checkIfisLoggedIn();
+    requestPermissions();
+    _initializeNotifications();
+    _startPeriodicBluetoothScan();
+  }
+
+  void _startPeriodicBluetoothScan() {
+    _scanTimer = Timer.periodic(Duration(seconds: 10), (timer) {
+      print("test");
+      _startBluetoothScan();
+    });
+  }
+
+
+
+  void _initializeNotifications() {
+    var initializationSettingsAndroid = AndroidInitializationSettings('icon_notification');
+    var initializationSettings = InitializationSettings(
+        android: initializationSettingsAndroid);
+    fltrNotification.initialize(initializationSettings);
+  }
+
+  @override
+  void dispose() {
+    _scanTimer?.cancel(); // Annuler le Timer lorsque le widget est disposé
+    super.dispose();
+  }
+
+
+  void _startBluetoothScan() async {
+    print("scan...");
+    flutterBlue.scan(timeout: Duration(seconds: 4)).listen((scanResult) {
+      if (mounted) { // Vérifier si le State est monté
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Scanning Bluetooth..."),
+            duration: Duration(seconds: 3),
+          ),
+        );
+
+      }else{
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Scanning Bluetooth..."),
+              duration: Duration(seconds: 3),
+            ),
+        );
+      };
+
+      for (var conducteur in defaultConducteurListe) {
+        if (scanResult.device.id.toString() == conducteur["MAC"]) {
+          _sendNotification();
+          break;
+        }
+      }
+    });
+  }
+
+
+
+  void _sendNotification() async {
+    if (_cooldownTimer == null || !_cooldownTimer!.isActive) {
+      var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+          'channel_ID', 'channel_name',
+          importance: Importance.max, priority: Priority.high, ticker: 'ticker');
+      var platformChannelSpecifics = NotificationDetails(
+          android: androidPlatformChannelSpecifics
+          );
+
+      await fltrNotification.show(
+        0,
+        'Notification de Conducteur',
+        'Voulez-vous prendre des passagers?',
+        platformChannelSpecifics,
+        payload: 'item x',
+      );
+
+      _cooldownTimer = Timer(Duration(minutes: 1), () {});
+    }
+  }
+
+
+  void handleDeviceFound(ScanResult scanResult) {
+    for (var conducteur in defaultConducteurListe) {
+      if (scanResult.device.id.toString() == conducteur["MAC"]) {
+        // Appareil trouvé
+      }
+    }
   }
 
   final List<String> ecoPhrases = [
