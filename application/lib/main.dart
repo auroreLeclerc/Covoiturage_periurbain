@@ -1,4 +1,5 @@
-import 'package:covoiturage_periurbain/server.dart';
+import 'package:covoiturage_periurbain/account_connection.dart';
+import 'package:covoiturage_periurbain/account_creation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
@@ -12,8 +13,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:async';
 import 'package:permission_handler/permission_handler.dart';
 
-import './account.dart'; // page de compte
-import 'auth_helper.dart';
+// page de compte
 import 'map_page.dart';
 
 void main() async {
@@ -77,11 +77,11 @@ class ApplicationAccueil extends State<Application> {
     super.initState();
     requestPermissions();
     _initializeNotifications();
-    _startPeriodicBluetoothScan();
+    // _startPeriodicBluetoothScan(); // FIXME: Quand le bluetooth est désactiver l'app plante en boucle
   }
 
   void _startPeriodicBluetoothScan() {
-    _scanTimer = Timer.periodic(Duration(seconds: 10), (timer) {
+    _scanTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       print("test");
       _startBluetoothScan();
     });
@@ -90,7 +90,7 @@ class ApplicationAccueil extends State<Application> {
 
 
   void _initializeNotifications() {
-    var initializationSettingsAndroid = AndroidInitializationSettings('icon_notification');
+    var initializationSettingsAndroid = const AndroidInitializationSettings('icon_notification');
     var initializationSettings = InitializationSettings(
         android: initializationSettingsAndroid);
     fltrNotification.initialize(initializationSettings);
@@ -105,10 +105,10 @@ class ApplicationAccueil extends State<Application> {
 
   void _startBluetoothScan() async {
     print("scan...");
-    flutterBlue.scan(timeout: Duration(seconds: 4)).listen((scanResult) {
+    flutterBlue.scan(timeout: const Duration(seconds: 4)).listen((scanResult) {
       if (mounted) { // Vérifier si le State est monté
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text("Scanning Bluetooth..."),
             duration: Duration(seconds: 3),
           ),
@@ -116,12 +116,12 @@ class ApplicationAccueil extends State<Application> {
 
       }else{
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text("Scanning Bluetooth..."),
               duration: Duration(seconds: 3),
             ),
         );
-      };
+      }
 
       for (var conducteur in defaultConducteurListe) {
         if (scanResult.device.id.toString() == conducteur["MAC"]) {
@@ -136,7 +136,7 @@ class ApplicationAccueil extends State<Application> {
 
   void _sendNotification() async {
     if (_cooldownTimer == null || !_cooldownTimer!.isActive) {
-      var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
           'channel_ID', 'channel_name',
           importance: Importance.max, priority: Priority.high, ticker: 'ticker');
       var platformChannelSpecifics = NotificationDetails(
@@ -151,7 +151,7 @@ class ApplicationAccueil extends State<Application> {
         payload: 'item x',
       );
 
-      _cooldownTimer = Timer(Duration(minutes: 1), () {});
+      _cooldownTimer = Timer(const Duration(minutes: 1), () {});
     }
   }
 
@@ -331,7 +331,11 @@ class ApplicationAccueil extends State<Application> {
                   Buttons.Email,
                   text: "Connecter avec Navette",
                   onPressed: () {
-
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const AccountConnection()),
+                    );
                   },
                 ),
                 const SizedBox(
@@ -367,7 +371,7 @@ class ApplicationAccueil extends State<Application> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const ServerDebug()),
+                          builder: (context) => const AccountCreation()),
                     );
                   },
                   child: const Text('Inscrivez-vous'),

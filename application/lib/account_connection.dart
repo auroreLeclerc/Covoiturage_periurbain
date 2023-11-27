@@ -1,41 +1,28 @@
 import "dart:convert";
 
+import "package:covoiturage_periurbain/map_page.dart";
 import "package:email_validator/email_validator.dart";
 import "package:flutter/material.dart";
 import 'package:http/http.dart' as http;
 
-class AccountCreation extends StatefulWidget {
-  const AccountCreation({super.key});
+class AccountConnection extends StatefulWidget {
+  const AccountConnection({super.key});
   @override
-  AccountCreationState createState() {
-    return AccountCreationState();
+  AccountConnectionState createState() {
+    return AccountConnectionState();
   }
 }
 
-class AccountCreationState extends State<AccountCreation> {
+class AccountConnectionState extends State<AccountConnection> {
   final _formKey = GlobalKey<FormState>();
-  final list = <DropdownMenuItem<String>>[
-    const DropdownMenuItem(
-      value: "passenger",
-      child: Text("Passager"),
-    ),
-    const DropdownMenuItem(
-      value: "driver",
-      child: Text("Conducteur"),
-    ),
-  ];
   late String mail;
-  late String name;
   late String password;
-  late String? role = list.first.value;
-  late String town;
-  late String catUrl = "https://http.cat/images/100.jpg";
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("Créer un compte"),
+          title: const Text("Connecter à un compte"),
         ),
         body: Form(
           key: _formKey,
@@ -55,13 +42,6 @@ class AccountCreationState extends State<AccountCreation> {
                   onSaved: (String? value) => mail = value!,
                   initialValue: "aurore.leclerc@etud.u-picardie.fr"),
               TextFormField(
-                  validator: (String? value) => value == null || value.isEmpty
-                      ? "Veuillez renseigner ce champ."
-                      : null,
-                  decoration: const InputDecoration(icon: Icon(Icons.person)),
-                  onSaved: (String? value) => name = value!,
-                  initialValue: "Aurore Leclerc"),
-              TextFormField(
                   obscureText: true,
                   obscuringCharacter: "*",
                   validator: (String? value) => value == null || value.isEmpty
@@ -70,25 +50,6 @@ class AccountCreationState extends State<AccountCreation> {
                   decoration: const InputDecoration(icon: Icon(Icons.password)),
                   onSaved: (String? value) => password = value!,
                   initialValue: "password"),
-              DropdownButton<String>(
-                value: role,
-                icon: const Icon(Icons.drive_eta),
-                onChanged: (String? value) {
-                  // This is called when the user selects an item.
-                  setState(() {
-                    role = value!;
-                  });
-                },
-                items: list,
-              ),
-              TextFormField(
-                  validator: (String? value) => value == null || value.isEmpty
-                      ? "Veuillez renseigner ce champ."
-                      : null,
-                  decoration:
-                      const InputDecoration(icon: Icon(Icons.location_city)),
-                  onSaved: (String? value) => town = value!,
-                  initialValue: "Albert"),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: ElevatedButton(
@@ -98,44 +59,44 @@ class AccountCreationState extends State<AccountCreation> {
 
                       final Map<String, String> toSend = {
                         "mail": mail,
-                        "name": name,
                         "password": password,
-                        "role": role.toString(),
-                        "town": town
                       };
                       http
-                          .put(
+                          .post(
                         Uri.parse('http://127.0.0.1:8080/account'),
                         headers: <String, String>{
                           'Content-Type': 'application/json; charset=UTF-8',
                         },
                         body: jsonEncode(toSend),
                       )
-                          .then((response) {
-                        setState(() {
-                          catUrl =
-                              "https://http.cat/images/${response.statusCode}.jpg";
-                        });
-                        if (response.statusCode == 201) {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Compte créer avec Succès")));
+                      .then((response) {
+                        if (response.statusCode == 200) {
+                          http.get(Uri.parse('http://127.0.0.1:8080/account'), headers: <String, String>{
+                            'Content-Type': 'application/json; charset=UTF-8',
+                            'Authorization': response.body
+                          }).then((responseGet) {
+                            final userData = jsonDecode(responseGet.body);
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => MapPage(userData: {
+                              'name': userData["name"],
+                              'email': mail,
+                              'id' : null,
+                              'token' : response.body,
+                              })),
+                            );
+                          });
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text(response.body)));
                         }
 
                       }).catchError((error) {
-                        setState(() {
-                          catUrl = "https://http.cat/images/521.jpg";
-                        });
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text(error.toString())),
                         );
                       });
                     }
                   },
-                  child: const Text("Créer un compte"),
+                  child: const Text("Se connecter"),
                 ),
               ),
             ],
