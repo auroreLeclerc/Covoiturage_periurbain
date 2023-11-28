@@ -78,6 +78,7 @@ class ApplicationAccueil extends State<Application> {
     requestPermissions();
     _initializeNotifications();
     // _startPeriodicBluetoothScan(); // FIXME: Quand le bluetooth est désactiver l'app plante en boucle
+    // faut mettre à jour chatgpt @Felix-Jonathan https://github.com/pauldemarco/flutter_blue/issues/1150 
   }
 
   void _startPeriodicBluetoothScan() {
