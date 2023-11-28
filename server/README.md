@@ -11,3 +11,5 @@ sudo systemctl start mariadb; mariadb --verbose -u user -p < "init.sql"; npm ci 
     - PATCH: mettre à jour le role, town
     - POST: obtenir un token de connexion à mettre dans le header Authorization tel quel
     - GET: account → obtenir les infos du compte
+
+![Diagramme de classe](./src/img/Diagramme_de_classe_cvp.png)
