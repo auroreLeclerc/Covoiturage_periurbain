@@ -129,7 +129,7 @@ class ApplicationAccueil extends State<Application> {
   }
 
   void _initializeNotifications() {
-    var initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
+    var initializationSettingsAndroid = const AndroidInitializationSettings('app_icon');
     var initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
     );
@@ -156,7 +156,7 @@ class ApplicationAccueil extends State<Application> {
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Nombre de passagers'),
+          title: const Text('Nombre de passagers'),
           content: TextField(
             keyboardType: TextInputType.number,
             onSubmitted: (value) {
