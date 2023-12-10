@@ -4,6 +4,7 @@
 sudo systemctl start mariadb; mariadb --verbose -u user -p < "init.sql"; npm ci --only=production; npm start
 ```
 ## La configuration du serveur et de la connexion à la BDD se fait dans ./config.json
+### J'utilise les credentials user:user sur la databse cvp [(documentation)](https://wiki.archlinux.org/title/MariaDB#Add_user)
 ## Le serveur supporte les requêtes :
 - /account (GET est authentifié, le reste est ouvert)
     - PUT: créer compte
