@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:covoiturage_periurbain/account_connection.dart';
 import 'package:covoiturage_periurbain/account_creation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
@@ -15,7 +18,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 // page de compte
 import 'map_page.dart';
-
+import 'package:http/http.dart' as http;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -56,6 +59,9 @@ class ApplicationAccueil extends State<Application> {
   Timer? _cooldownTimer;
   FlutterBlue flutterBlue = FlutterBlue.instance;
   Timer? _scanTimer;
+  String? MACConducteur;
+  StreamSubscription? _scanSubscription;
+  bool searchBLE = true;
 
 
   // Définition de la liste des conducteurs
@@ -77,8 +83,16 @@ class ApplicationAccueil extends State<Application> {
     super.initState();
     requestPermissions();
     _initializeNotifications();
-    // _startPeriodicBluetoothScan(); // FIXME: Quand le bluetooth est désactiver l'app plante en boucle
+    _checkBluetoothAndStartScan(); // FIXME: Quand le bluetooth est désactiver l'app plante en boucle
     // faut mettre à jour chatgpt @Felix-Jonathan https://github.com/pauldemarco/flutter_blue/issues/1150 
+  }
+
+  void _checkBluetoothAndStartScan() async {
+    if (await flutterBlue.isOn) {
+      _startPeriodicBluetoothScan();
+    } else {
+      print("Bluetooth n'est pas activé");
+    }
   }
 
   void _startPeriodicBluetoothScan() {
@@ -88,14 +102,74 @@ class ApplicationAccueil extends State<Application> {
     });
   }
 
+  Future<Position> _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
 
+    // Vérifier si les services de localisation sont activés
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Les services de localisation sont désactivés.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Les permissions de localisation sont refusées');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Les permissions de localisation sont définitivement refusées, nous ne pouvons pas demander les permissions.');
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
 
   void _initializeNotifications() {
-    var initializationSettingsAndroid = const AndroidInitializationSettings('icon_notification');
+    var initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
     var initializationSettings = InitializationSettings(
-        android: initializationSettingsAndroid);
-    fltrNotification.initialize(initializationSettings);
+      android: initializationSettingsAndroid,
+    );
+
+    fltrNotification.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) {
+        switch (notificationResponse.notificationResponseType) {
+          case NotificationResponseType.selectedNotification:
+            _onSelectNotification(notificationResponse.payload);
+            break;
+          case NotificationResponseType.selectedNotificationAction:
+          // Gérer si nécessaire
+            break;
+        }
+      },
+    );
   }
+
+
+  Future _onSelectNotification(String? payload) async {
+    if (payload == 'demande_passagers') {
+      // Afficher une boîte de dialogue pour saisir le nombre de passagers
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Nombre de passagers'),
+          content: TextField(
+            keyboardType: TextInputType.number,
+            onSubmitted: (value) {
+              // Envoyer les informations au serveur
+              _sendPassengerInfoToServer(int.parse(value));
+            },
+          ),
+        ),
+      );
+    }
+  }
+
+
 
   @override
   void dispose() {
@@ -103,67 +177,93 @@ class ApplicationAccueil extends State<Application> {
     super.dispose();
   }
 
-
   void _startBluetoothScan() async {
-    print("scan...");
-    flutterBlue.scan(timeout: const Duration(seconds: 4)).listen((scanResult) {
-      if (mounted) { // Vérifier si le State est monté
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Scanning Bluetooth..."),
-            duration: Duration(seconds: 3),
-          ),
-        );
-
-      }else{
-        ScaffoldMessenger.of(context).showSnackBar(
+    // Vérifier si le scan est déjà en cours et l'arrêter si nécessaire
+    print("tentative de scan...");
+    if (searchBLE) {
+      print("scan...");
+      _scanSubscription = flutterBlue.scan(timeout: const Duration(seconds: 4)).listen((scanResult) {
+        if (mounted) { // Vérifier si le State est monté
+          ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("Scanning Bluetooth..."),
               duration: Duration(seconds: 3),
             ),
-        );
-      }
-
-      for (var conducteur in defaultConducteurListe) {
-        if (scanResult.device.id.toString() == conducteur["MAC"]) {
-          _sendNotification();
-          break;
+          );
         }
-      }
+
+        for (var conducteur in defaultConducteurListe) {
+          if (scanResult.device.id.toString() == "D5:42:AA:EB:8F:07") {
+            print("find");
+            _stopScan();
+            _sendNotification();
+            break;
+          }
+        }
     });
+    }
   }
 
-
+  void _stopScan() {
+    if (_scanSubscription != null) {
+      print("Arrêt du scan.");
+      searchBLE = false;
+      _scanSubscription?.cancel();
+      _scanSubscription = null;
+    } else {
+      print("Aucun scan en cours à arrêter.");
+    }
+  }
 
   void _sendNotification() async {
-    if (_cooldownTimer == null || !_cooldownTimer!.isActive) {
-      var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
-          'channel_ID', 'channel_name',
-          importance: Importance.max, priority: Priority.high, ticker: 'ticker');
-      var platformChannelSpecifics = NotificationDetails(
-          android: androidPlatformChannelSpecifics
-          );
+    var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
+        'channel_ID', 'channel_name',
+        importance: Importance.max, priority: Priority.high, ticker: 'ticker');
+    var platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics
+    );
+  print("notification send");
+    _stopScan();
+    await fltrNotification.show(
+      0,
+      'Demande de Conducteur',
+      'Combien de passagers voulez-vous prendre?',
+      platformChannelSpecifics,
+      payload: 'demande_passagers',
+    );
 
-      await fltrNotification.show(
-        0,
-        'Notification de Conducteur',
-        'Voulez-vous prendre des passagers?',
-        platformChannelSpecifics,
-        payload: 'item x',
+  }
+
+
+  Future<void> _sendPassengerInfoToServer(int passengerCount) async {
+    print(passengerCount);
+    try {
+      Position position = await _determinePosition();
+
+      String? id = _userData?['id'];
+      String? macAddress = MACConducteur;
+
+      // Envoyer les informations au serveur
+      await http.post(
+        Uri.parse('http://10.0.2.2:4443/passengerInfo'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'id': id,
+          'mac': macAddress,
+          'passengerCount': passengerCount,
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+        }),
       );
-
-      _cooldownTimer = Timer(const Duration(minutes: 1), () {});
+    } catch (e) {
+      print('Erreur lors de l\'envoi des informations de passager: $e');
     }
   }
 
 
-  void handleDeviceFound(ScanResult scanResult) {
-    for (var conducteur in defaultConducteurListe) {
-      if (scanResult.device.id.toString() == conducteur["MAC"]) {
-        // Appareil trouvé
-      }
-    }
-  }
+
 
   final List<String> ecoPhrases = [
     'Protégeons la planète ensemble !',
@@ -198,6 +298,9 @@ class ApplicationAccueil extends State<Application> {
       final userData = await FacebookAuth.instance.getUserData();
       _userData = userData;
 
+      // Envoyer le token au serveur
+      await sendTokenToServer(_accessToken!.token);
+
       // Rediriger vers MairieMapPage
       Navigator.push(
         context,
@@ -212,25 +315,23 @@ class ApplicationAccueil extends State<Application> {
     });
   }
 
+
   Future<void> logout() async {
     await FacebookAuth.instance.logOut();
     _accessToken = null;
     _userData = null;
     setState(() {});
   }
-
   Future<UserCredential?> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) return null;
-      final GoogleSignInAuthentication googleAuth =
-      await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      UserCredential userCredential =
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
 
       // Stocker les informations d'utilisateur dans _userData
       setState(() {
@@ -240,6 +341,9 @@ class ApplicationAccueil extends State<Application> {
           'id' : userCredential.user?.uid,
         };
       });
+
+      // Envoyer le token au serveur
+      await sendTokenToServer(userCredential.user!.uid);
 
       // Rediriger vers MairieMapPage
       Navigator.push(
@@ -253,6 +357,39 @@ class ApplicationAccueil extends State<Application> {
       return null;
     }
   }
+
+  //GERER COTE SERVEUR => Envoyer Token, s'il n'existe pas,création compte côté serveur.
+  //Renvoyer adresse Mac s'il y en a une lié
+  Future<void> sendTokenToServer(String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:4443/getMacByToken'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'token': token,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        // Supposons que l'adresse MAC est retournée sous la clé 'mac'
+        String macAddress = responseBody['mac'];
+
+        setState(() {
+          MACConducteur = macAddress;
+        });
+
+        print('Adresse MAC reçue du serveur: $MACConducteur');
+      } else {
+        print('Erreur lors de la requête au serveur: ${response.body}');
+      }
+    } catch (e) {
+      print('Erreur lors de l\'envoi du token: $e');
+    }
+  }
+
 
 
   @override
@@ -385,4 +522,6 @@ class ApplicationAccueil extends State<Application> {
       ),
     );
   }
+
+
 }

@@ -44,7 +44,7 @@ dependencies:
   url_launcher: ^6.0.12
   flutter_blue: ^0.8.0 # Utilisez la dernière version compatible avec null safety
   flutter_local_notifications: ^16.1.0
-  permission_handler: ^11.1.0
+  permission_handler: ^11.0.0
 
 
   # The following adds the Cupertino Icons font to your application.

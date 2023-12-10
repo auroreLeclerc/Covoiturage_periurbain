@@ -63,7 +63,7 @@ class AccountConnectionState extends State<AccountConnection> {
                       };
                       http
                           .post(
-                        Uri.parse('http://127.0.0.1:8080/account'),
+                        Uri.parse('http://10.0.2.2:4443/account'),
                         headers: <String, String>{
                           'Content-Type': 'application/json; charset=UTF-8',
                         },
@@ -71,7 +71,7 @@ class AccountConnectionState extends State<AccountConnection> {
                       )
                       .then((response) {
                         if (response.statusCode == 200) {
-                          http.get(Uri.parse('http://127.0.0.1:8080/account'), headers: <String, String>{
+                          http.get(Uri.parse('http://10.0.2.2:4443/account'), headers: <String, String>{
                             'Content-Type': 'application/json; charset=UTF-8',
                             'Authorization': response.body
                           }).then((responseGet) {
