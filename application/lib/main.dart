@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:covoiturage_periurbain/account_connection.dart';
 import 'package:covoiturage_periurbain/account_creation.dart';
@@ -70,6 +71,39 @@ class ApplicationAccueil extends State<Application> {
     {"id": "494", "MAC": "D5:05:C9:41:03:89"}
   ];
 
+  final List<Map<String, String>> listeArrets = [];
+
+  Future<void> getArretsFromServer() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:4443/getArrets'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        // Supposons que les arrêts sont retournés sous forme d'une liste de maps
+        List<dynamic> arretsList = responseBody['arrets'];
+
+        setState(() {
+          listeArrets.clear();
+          for (var arret in arretsList) {
+            listeArrets.add(Map<String, String>.from(arret));
+          }
+        });
+
+        print('Liste des arrêts reçue du serveur.');
+      } else {
+        print('Erreur lors de la requête au serveur pour obtenir les arrêts: ${response.body}');
+      }
+    } catch (e) {
+      print('Erreur lors de la récupération des arrêts: $e');
+    }
+  }
+
+
   void requestPermissions() async {
     await [
       Permission.bluetoothScan,
@@ -84,6 +118,7 @@ class ApplicationAccueil extends State<Application> {
     requestPermissions();
     _initializeNotifications();
     _checkBluetoothAndStartScan(); // FIXME: Quand le bluetooth est désactiver l'app plante en boucle
+    getArretsFromServer();
     // faut mettre à jour chatgpt @Felix-Jonathan https://github.com/pauldemarco/flutter_blue/issues/1150 
   }
 
@@ -152,20 +187,33 @@ class ApplicationAccueil extends State<Application> {
 
   Future _onSelectNotification(String? payload) async {
     if (payload == 'demande_passagers') {
-      // Afficher une boîte de dialogue pour saisir le nombre de passagers
-      await showDialog(
+      // ... Votre code existant pour 'demande_passagers'
+    } else if (payload == 'reponse_passager') {
+      // Afficher une boîte de dialogue pour demander la réponse de l'utilisateur
+      bool response = await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Nombre de passagers'),
-          content: TextField(
-            keyboardType: TextInputType.number,
-            onSubmitted: (value) {
-              // Envoyer les informations au serveur
-              _sendPassengerInfoToServer(int.parse(value));
-            },
-          ),
+          title: Text('Arrêt trouvé !'),
+          content: Text('Cherchez vous un chauffeur ?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('OUI'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text('NON'),
+            ),
+          ],
         ),
       );
+
+      if (response) {
+        // L'utilisateur a appuyé sur "OUI"
+        Position position = await _determinePosition();
+        String? id = _userData?['id'];
+        await _sendPassengerResponseToServer(id, position.latitude, position.longitude);
+      }
     }
   }
 
@@ -192,14 +240,26 @@ class ApplicationAccueil extends State<Application> {
           );
         }
 
+        //Scan Conducteur
         for (var conducteur in defaultConducteurListe) {
-          if (scanResult.device.id.toString() == "D5:42:AA:EB:8F:07") {
-            print("find");
+          if (scanResult.device.id.toString() == "D5:42:AA:EB:8F:07") { //493
+            print("findconducteur");
             _stopScan();
-            _sendNotification();
+            _sendNotificationConducteur();
             break;
           }
         }
+
+
+        //Scan Arret passagé
+        //for (var arret in listeArrets) {
+          if (scanResult.device.id.toString() == "FB:86:61:5A:84:6B") { //496
+            print("findpassager");
+            _stopScan();
+            _sendNotificationPassager();
+            //break;
+          }
+        //}
     });
     }
   }
@@ -215,14 +275,14 @@ class ApplicationAccueil extends State<Application> {
     }
   }
 
-  void _sendNotification() async {
+  void _sendNotificationConducteur() async {
     var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
         'channel_ID', 'channel_name',
         importance: Importance.max, priority: Priority.high, ticker: 'ticker');
     var platformChannelSpecifics = NotificationDetails(
         android: androidPlatformChannelSpecifics
     );
-  print("notification send");
+    print("notification send");
     _stopScan();
     await fltrNotification.show(
       0,
@@ -231,12 +291,46 @@ class ApplicationAccueil extends State<Application> {
       platformChannelSpecifics,
       payload: 'demande_passagers',
     );
-
   }
 
+  void _sendNotificationPassager() async {
+    // Identifier uniques pour les actions de la notification
+    const String ouiActionId = 'OUI_ACTION';
+    const String nonActionId = 'NON_ACTION';
 
-  Future<void> _sendPassengerInfoToServer(int passengerCount) async {
-    print(passengerCount);
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'channel_ID',
+      'channel_name',
+      importance: Importance.max,
+      priority: Priority.high,
+      ticker: 'ticker',
+      additionalFlags: Int32List.fromList(<int>[4]), // FLAG_AUTO_CANCEL
+    );
+
+    var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    print("notification send");
+    _stopScan();
+
+    await fltrNotification.show(
+      0,
+      'Arrêt trouvé !',
+      'Cherchez vous un chauffeur ?',
+      platformChannelSpecifics,
+      payload: 'reponse_passager',
+    );
+  }
+
+  void _handleNotificationAction(String actionId) async {
+    if (actionId == 'OUI_ACTION') {
+      // Envoyer les informations au serveur
+      Position position = await _determinePosition();
+      String? id = _userData?['id'];
+      await _sendPassengerResponseToServer(id, position.latitude, position.longitude);
+    }
+  }
+
+  Future<void> _sendPassengerResponseToServer(String? id, double latitude, double longitude) async {
     try {
       Position position = await _determinePosition();
 
@@ -252,7 +346,6 @@ class ApplicationAccueil extends State<Application> {
         body: jsonEncode({
           'id': id,
           'mac': macAddress,
-          'passengerCount': passengerCount,
           'latitude': position.latitude,
           'longitude': position.longitude,
         }),
@@ -263,6 +356,32 @@ class ApplicationAccueil extends State<Application> {
   }
 
 
+  Future<void> _sendConducteurInfoToServer(int passengerCount) async {
+    print(passengerCount);
+    try {
+      Position position = await _determinePosition();
+
+      String? id = _userData?['id'];
+      String? macAddress = MACConducteur;
+
+      // Envoyer les informations au serveur
+      await http.post(
+        Uri.parse('http://10.0.2.2:4443/conducteurInfo'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'id': id,
+          'mac': macAddress,
+          'passengerCount': passengerCount,
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+        }),
+      );
+    } catch (e) {
+      print('Erreur lors de l\'envoi des informations de passager: $e');
+    }
+  }
 
 
   final List<String> ecoPhrases = [
