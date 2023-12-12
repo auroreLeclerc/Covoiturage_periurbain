@@ -186,8 +186,21 @@ class ApplicationAccueil extends State<Application> {
 
 
   Future _onSelectNotification(String? payload) async {
-    if (payload == 'demande_passagers') {
-      // ... Votre code existant pour 'demande_passagers'
+    if (payload == 'chauffeur') {
+      // Afficher une boîte de dialogue pour saisir le nombre de passagers
+      await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Nombre de passagers'),
+            content: TextField(
+              keyboardType: TextInputType.number,
+              onSubmitted: (value) {
+                // Envoyer les informations au serveur
+                _sendConducteurInfoToServer(int.parse(value));
+              },
+            ),
+          ),
+      );
     } else if (payload == 'reponse_passager') {
       // Afficher une boîte de dialogue pour demander la réponse de l'utilisateur
       bool response = await showDialog(
@@ -228,7 +241,7 @@ class ApplicationAccueil extends State<Application> {
   void _startBluetoothScan() async {
     // Vérifier si le scan est déjà en cours et l'arrêter si nécessaire
     print("tentative de scan...");
-    if (searchBLE) {
+    if (searchBLE == true) {
       print("scan...");
       _scanSubscription = flutterBlue.scan(timeout: const Duration(seconds: 4)).listen((scanResult) {
         if (mounted) { // Vérifier si le State est monté
@@ -241,21 +254,20 @@ class ApplicationAccueil extends State<Application> {
         }
 
         //Scan Conducteur
-        for (var conducteur in defaultConducteurListe) {
+        //for (var conducteur in defaultConducteurListe) {
+          print(scanResult.device.id.toString());
           if (scanResult.device.id.toString() == "D5:42:AA:EB:8F:07") { //493
             print("findconducteur");
-            _stopScan();
             _sendNotificationConducteur();
-            break;
+            //break;
+            //}
           }
-        }
-
 
         //Scan Arret passagé
         //for (var arret in listeArrets) {
+          print(scanResult.device.id.toString());
           if (scanResult.device.id.toString() == "FB:86:61:5A:84:6B") { //496
             print("findpassager");
-            _stopScan();
             _sendNotificationPassager();
             //break;
           }
@@ -276,22 +288,31 @@ class ApplicationAccueil extends State<Application> {
   }
 
   void _sendNotificationConducteur() async {
-    var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
         'channel_ID', 'channel_name',
-        importance: Importance.max, priority: Priority.high, ticker: 'ticker');
+        importance: Importance.max,
+        priority: Priority.high,
+        ticker: 'ticker',
+        icon: 'icon_notification' // Référence à l'icône dans le dossier drawable
+    );
+
     var platformChannelSpecifics = NotificationDetails(
         android: androidPlatformChannelSpecifics
     );
+
     print("notification send");
-    _stopScan();
+    //_stopScan();
+
     await fltrNotification.show(
       0,
-      'Demande de Conducteur',
+      'Voulez vous covoiturer ?',
       'Combien de passagers voulez-vous prendre?',
       platformChannelSpecifics,
-      payload: 'demande_passagers',
+      payload: 'chauffeur',
     );
   }
+
+
 
   void _sendNotificationPassager() async {
     // Identifier uniques pour les actions de la notification
@@ -304,13 +325,16 @@ class ApplicationAccueil extends State<Application> {
       importance: Importance.max,
       priority: Priority.high,
       ticker: 'ticker',
+      icon: 'icon_notification', // Référence à l'icône dans le dossier drawable
       additionalFlags: Int32List.fromList(<int>[4]), // FLAG_AUTO_CANCEL
     );
+
+
 
     var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
 
     print("notification send");
-    _stopScan();
+    //_stopScan();
 
     await fltrNotification.show(
       0,
@@ -320,6 +344,7 @@ class ApplicationAccueil extends State<Application> {
       payload: 'reponse_passager',
     );
   }
+
 
   void _handleNotificationAction(String actionId) async {
     if (actionId == 'OUI_ACTION') {
