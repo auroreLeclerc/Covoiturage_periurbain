@@ -9,8 +9,11 @@ sudo systemctl start mariadb; mariadb --verbose -u user -p < "init.sql"; npm ci 
 - /account (GET est authentifié, le reste est ouvert)
     - PUT: créer compte
     - DELETE: TODO
-    - PATCH: mettre à jour le role, town
+    - PATCH: initialiser le compte
     - POST: obtenir un token de connexion à mettre dans le header Authorization tel quel
-    - GET: account → obtenir les infos du compte
+    - GET: obtenir les infos du compte
+- /travel (secure)
+    - PUT: créer un voyage
+    - GET: voyage courant
 
 ![Diagramme de classe](./src/img/Diagramme_de_classe_cvp.png)

@@ -13,29 +13,51 @@
 			</figure>
 		</header>
 		<section>
-			<form action="https://127.0.0.1:4443/account" class="put">
-				<p>Create account</p>
+			<form action="http://127.0.0.1:4443/account" class="put">
+				<p>Create passenger</p>
 				<input type="email" name="mail" value="aurore.leclerc@etud.u-picardie.fr">
 				<input type="text" name="name" value="Aurore">
-				<input type="text" name="password" value="password">
-				<input type="submit" value="Submit">
-			</form>
-			<form action="https://127.0.0.1:4443/account" class="post">
-				<p>Get account connection</p>
-				<input type="email" name="mail" value="aurore.leclerc@etud.u-picardie.fr">
-				<input type="text" name="password" value="password">
-				<input type="submit" value="Submit">
-			</form>
-			<form action="https://127.0.0.1:4443/account" class="patch">
-				<p>Update account</p>
+				<input type="password" name="password" value="password">
 				<select name="role">
 					<option value="passenger">passenger</option>
 					<option value="driver">driver</option>
 				</select>
-				<input type="text" name="town" value="Albert">
 				<input type="submit" value="Submit">
 			</form>
-			<form action="https://127.0.0.1:4443/account" class="get">
+			<form action="http://127.0.0.1:4443/account" class="put">
+				<p>Create driver</p>
+				<input type="email" name="mail" value="alan.menet@etud.u-picardie.fr">
+				<input type="text" name="name" value="Alan">
+				<input type="password" name="password" value="password">
+				<select name="role">
+					<option value="driver">driver</option>
+					<option value="passenger">passenger</option>
+				</select>
+				<input type="submit" value="Submit">
+			</form>
+			<form action="http://127.0.0.1:4443/account" class="post">
+				<p>Get passenger connection</p>
+				<input type="email" name="mail" value="aurore.leclerc@etud.u-picardie.fr">
+				<input type="password" name="password" value="password">
+				<input type="submit" value="Submit">
+			</form>
+			<form action="http://127.0.0.1:4443/account" class="post">
+				<p>Get driver connection</p>
+				<input type="email" name="mail" value="alan.menet@etud.u-picardie.fr">
+				<input type="password" name="password" value="password">
+				<input type="submit" value="Submit">
+			</form>
+			<form action="http://127.0.0.1:4443/account" class="patch">
+				<p>Set driver</p>
+				<input type="text" name="numberplate" value="AA-111-AA">
+				<input type="text" name="mac" value="ff:ff:ff:ff:ff:ff">
+				<input type="submit" value="Submit">
+			</form>
+			<form action="http://127.0.0.1:4443/account" class="patch">
+				<p>Set passsenger</p>
+				<input type="submit" value="Submit">
+			</form>
+			<form action="http://127.0.0.1:4443/account" class="get">
 				<p>Get account</p>
 				<input type="submit" value="Submit">
 			</form>

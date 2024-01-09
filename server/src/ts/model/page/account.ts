@@ -9,11 +9,14 @@ export default class Account extends PageAuth {
 		if (this.authenticate()) this.getExecution();
 	}
 	private getExecution() {
-		this.database.get("SELECT role, name, town, phone FROM cvp.profile WHERE mail = ?", [this.token.mail]).then(http => {
-			if (!http.body) {
-				this.transaction.sendStatus(http.code, http.message);
-			}
-			else this.transaction.response.end(JSON.stringify(http.body[0]));
+		this.database.getProfile(this.token.mail).then(role => {
+			const select = role === "driver" ? ", numberplate, mac" : ", travel_id";
+			this.database.get(`SELECT cvp.${role}.mail, name, town, phone ${select} FROM cvp.profile INNER JOIN cvp.${role} ON cvp.profile.mail = cvp.${role}.mail WHERE cvp.${role}.mail = ?`, [this.token.mail]).then(http => {
+				if (!http.body) {
+					this.transaction.sendStatus(http.code, http.message);
+				}
+				else this.transaction.response.end(JSON.stringify(http.body[0]));
+			});
 		});
 	}
 	/**
@@ -50,8 +53,8 @@ export default class Account extends PageAuth {
 	public put() {
 		bcrypt.hash(this.posted.password, 10).then(hash => {
 			this.database.set(
-				"INSERT INTO cvp.profile(name, mail, password) VALUES(?, ?, ?)",
-				[this.posted.name, this.posted.mail, hash]
+				"INSERT INTO cvp.profile(name, mail, password, role) VALUES(?, ?, ?, ?)",
+				[this.posted.name, this.posted.mail, hash, this.posted.role]
 			).then(http => {
 				this.transaction.sendStatus(http.code, http.message);
 			});
@@ -67,11 +70,26 @@ export default class Account extends PageAuth {
 		if (this.authenticate()) this.patchExecution();
 	}
 	private patchExecution() {
-		this.database.set(
-			"UPDATE cvp.profile SET role=?, town=? WHERE mail=?",
-			[this.posted.role, this.posted.town, this.token.mail]
-		).then(http => {
-			this.transaction.sendStatus(http.code, http.message);
+		this.database.getProfile(this.token.mail).then(role => {
+			switch (role) {
+			case "driver":
+				this.database.set(
+					"INSERT INTO cvp.driver(numberplate, mac, mail) VALUES(?, ?, ?)",
+					[this.posted.numberplate, this.posted.mac, this.token.mail]
+				).then(http => {
+					this.transaction.sendStatus(http.code, http.message);
+				});
+				break;
+			
+			case "passenger":
+				this.database.set(
+					"INSERT INTO cvp.passenger(mail) VALUES(?)",
+					[this.token.mail]
+				).then(http => {
+					this.transaction.sendStatus(http.code, http.message);
+				});
+				break;
+			}
 		});
 	}
 }

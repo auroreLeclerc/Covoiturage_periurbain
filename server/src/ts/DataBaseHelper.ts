@@ -111,4 +111,15 @@ export class DataBaseHelper {
 			}
 		});
 	}
+
+	getProfile(mail: string) {
+		return this.get("SELECT role FROM cvp.profile WHERE mail = ?", [mail]).then(http => {
+			if (http.body?.length && (http.body[0].role === "driver" || http.body[0].role === "passenger")) {
+				return http.body[0].role;
+			}
+			else {
+				throw new Error("Unset role " + JSON.stringify(http));
+			}
+		});
+	}
 }
