@@ -164,7 +164,7 @@ class ApplicationAccueil extends State<Application> {
   }
 
   void _initializeNotifications() {
-    var initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
+    var initializationSettingsAndroid = const AndroidInitializationSettings('app_icon');
     var initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
     );
@@ -191,7 +191,7 @@ class ApplicationAccueil extends State<Application> {
       await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Nombre de passagers'),
+            title: const Text('Nombre de passagers'),
             content: TextField(
               keyboardType: TextInputType.number,
               onSubmitted: (value) {
@@ -206,16 +206,16 @@ class ApplicationAccueil extends State<Application> {
       bool response = await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Arrêt trouvé !'),
-          content: Text('Cherchez vous un chauffeur ?'),
+          title: const Text('Arrêt trouvé !'),
+          content: const Text('Cherchez vous un chauffeur ?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text('OUI'),
+              child: const Text('OUI'),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text('NON'),
+              child: const Text('NON'),
             ),
           ],
         ),
@@ -288,7 +288,7 @@ class ApplicationAccueil extends State<Application> {
   }
 
   void _sendNotificationConducteur() async {
-    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
         'channel_ID', 'channel_name',
         importance: Importance.max,
         priority: Priority.high,
