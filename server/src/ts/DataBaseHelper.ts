@@ -38,7 +38,8 @@ export class DataBaseHelper {
 		return mariadb.createConnection({
 			host: this.host,
 			user: this.user,
-			password: this.password
+			password: this.password,
+			database: "cvp"
 		}).then(connection => {
 			this.connection = connection;
 			return connection.constructor.name;

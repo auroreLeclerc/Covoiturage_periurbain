@@ -5,8 +5,9 @@
 	"main": "main.js",
 	"type": "module",
 	"scripts": {
-		"start": "npx tsc -p ./tsconfig.json & node ./src/transpiler/main.js",
-		"purge": "rm -r ./src/transpiler/ & mkdir ./src/transpiler/ & npm start"
+		"start_windows": "npx tsc -p ./tsconfig.json & node ./src/transpiler/main.js",
+		"start": "npx tsc -p ./tsconfig.json; node ./src/transpiler/main.js",
+		"purge": "rm -r ./src/transpiler/; mkdir ./src/transpiler/; npm start"
 	},
 	"repository": {
 		"type": "git",

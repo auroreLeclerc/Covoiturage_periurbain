@@ -11,7 +11,7 @@ export default class Account extends PageAuth {
 	private getExecution() {
 		this.database.getProfile(this.token.mail).then(role => {
 			const select = role === "driver" ? ", numberplate, mac" : ", travel_id";
-			this.database.get(`SELECT cvp.${role}.mail, name, town, phone ${select} FROM cvp.profile INNER JOIN cvp.${role} ON cvp.profile.mail = cvp.${role}.mail WHERE cvp.${role}.mail = ?`, [this.token.mail]).then(http => {
+			this.database.get(`SELECT ${role}.mail, name, town, phone ${select} FROM profile INNER JOIN ${role} ON profile.mail = ${role}.mail WHERE ${role}.mail = ?`, [this.token.mail]).then(http => {
 				if (!http.body) {
 					this.transaction.sendStatus(http.code, http.message);
 				}
@@ -23,7 +23,7 @@ export default class Account extends PageAuth {
 	 * @note connection
 	 */
 	public post() {
-		this.database.get("SELECT password, banned FROM cvp.profile WHERE mail = ?", [this.posted.mail]).then(http => {
+		this.database.get("SELECT password, banned FROM profile WHERE mail = ?", [this.posted.mail]).then(http => {
 			if (!http.body) {
 				this.transaction.sendStatus(http.code, http.message);
 			}
@@ -53,7 +53,7 @@ export default class Account extends PageAuth {
 	public put() {
 		bcrypt.hash(this.posted.password, 10).then(hash => {
 			this.database.set(
-				"INSERT INTO cvp.profile(name, mail, password, role) VALUES(?, ?, ?, ?)",
+				"INSERT INTO profile(name, mail, password, role) VALUES(?, ?, ?, ?)",
 				[this.posted.name, this.posted.mail, hash, this.posted.role]
 			).then(http => {
 				this.transaction.sendStatus(http.code, http.message);
@@ -74,7 +74,7 @@ export default class Account extends PageAuth {
 			switch (role) {
 			case "driver":
 				this.database.set(
-					"INSERT INTO cvp.driver(numberplate, mac, mail) VALUES(?, ?, ?)",
+					"INSERT INTO driver(numberplate, mac, mail) VALUES(?, ?, ?)",
 					[this.posted.numberplate, this.posted.mac, this.token.mail]
 				).then(http => {
 					this.transaction.sendStatus(http.code, http.message);
@@ -83,7 +83,7 @@ export default class Account extends PageAuth {
 			
 			case "passenger":
 				this.database.set(
-					"INSERT INTO cvp.passenger(mail) VALUES(?)",
+					"INSERT INTO passenger(mail) VALUES(?)",
 					[this.token.mail]
 				).then(http => {
 					this.transaction.sendStatus(http.code, http.message);

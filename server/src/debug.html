@@ -61,6 +61,28 @@
 				<p>Get account</p>
 				<input type="submit" value="Submit">
 			</form>
+			<form action="http://127.0.0.1:4443/travel" class="put">
+				<p>Set travel</p>
+				<input type="text" name="departure" value="Albert">
+				<input type="text" name="arrival" value="Amiens">
+				<input type="number" name="seats" value="2">
+				<input type="submit" value="Submit">
+			</form>
+			<form action="http://127.0.0.1:4443/travel" class="get">
+				<p>Get travel</p>
+				<input type="submit" value="Submit">
+			</form>
+			<form action="http://127.0.0.1:4443/travel" class="patch">
+				<p>Enroll on travel</p>
+				<input type="number" name="travel_id" value="1">
+				<input type="submit" value="Submit">
+			</form>
+			<form action="http://127.0.0.1:4443/travel" class="post">
+				<p>Get travels</p>
+				<input type="text" name="departure" value="Albert">
+				<input type="text" name="arrival" value="Amiens">
+				<input type="submit" value="Submit">
+			</form>
 		</section>
 		<script>
 			let token = "";

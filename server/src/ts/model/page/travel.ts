@@ -7,30 +7,44 @@ export default class Travel extends PageEnforcedAuth {
 			switch (role) {
 			case "driver":
 				this.database.get(
-					"SELECT driver, departure, arrival, start, over FROM cvp.travel INNER JOIN cvp.driver ON cvp.travel.driver = cvp.driver.mail WHERE cvp.driver.mail = ?",
+					"SELECT `driver`, `departure`, `arrival`, `start`, `seats`, `over` FROM travel WHERE driver=?",
 					[this.token.mail]
 				).then(http => {
-					this.transaction.sendStatus(http.code, http.message);
+					if (!http.body) {
+						this.transaction.sendStatus(http.code, http.message);
+					}
+					else this.transaction.response.end(JSON.stringify(http.body));
 				});
 				break;
 			case "passenger":
 				this.database.get(
-					"SELECT driver, departure, arrival, start, over FROM cvp.travel INNER JOIN cvp.passenger ON cvp.travel.travel_id = cvp.passenger.mail WHERE cvp.passenger.mail = ?",
+					"SELECT `driver`, `departure`, `arrival`, `start`, `over`, `seats` FROM travel INNER JOIN passenger ON travel.id=passenger.travel_id WHERE passenger.mail=?",
 					[this.token.mail]
 				).then(http => {
-					this.transaction.sendStatus(http.code, http.message);
+					if (!http.body) {
+						this.transaction.sendStatus(http.code, http.message);
+					}
+					else this.transaction.response.end(JSON.stringify(http.body));
 				});
 				break;
 			}
 		});
 	}
 	protected postExecution() {
-		this.transaction.sendStatus(httpCodes["Not Implemented"]);
+		this.database.get(
+			"SELECT id, driver, start, seats FROM travel WHERE departure=? AND arrival=?",
+			[this.posted.departure, this.posted.arrival]
+		).then(http => {
+			if (!http.body) {
+				this.transaction.sendStatus(http.code, http.message);
+			}
+			else this.transaction.response.end(JSON.stringify(http.body));
+		});
 	}
 	protected putExecution() {
 		this.database.set(
-			"UPDATE cvp.passenger SET travel_id=?, travelling=true WHERE mail=? AND (SELECT COUNT(cvp.driver.travelling) WHERE ) <= cvp.travel.places",
-			[this.posted.travelId, this.token.mail, this.posted.places, this.posted.arrival]
+			"INSERT INTO travel(driver, departure, arrival, seats) VALUES(?, ?, ?, ?)",
+			[this.token.mail, this.posted.departure, this.posted.arrival, this.posted.seats]
 		).then(http => {
 			this.transaction.sendStatus(http.code, http.message);
 		});
@@ -39,6 +53,19 @@ export default class Travel extends PageEnforcedAuth {
 		this.transaction.sendStatus(httpCodes["Not Implemented"]);
 	}
 	protected patchExecution() {
-		this.transaction.sendStatus(httpCodes["Not Implemented"]);
+		this.database.get(
+			"SELECT COUNT(passenger.travelling), travel.seats FROM travel INNER JOIN passenger ON travel.id=passenger.travel_id WHERE travel.id=?",
+			[this.posted.travel_id]
+		).then(http => {
+			if (http.body && (Number(http.body[0]["COUNT(passenger.travelling)"]) < Number(http.body[0].seats) || Number(http.body[0]["COUNT(passenger.travelling)"]) === 0)) {
+				this.database.set(
+					"UPDATE passenger SET travel_id=?, travelling=? WHERE mail=?",
+					[this.posted.travel_id, true, this.token.mail]
+				).then(http => {
+					this.transaction.sendStatus(http.code, http.message);
+				});
+			}
+			else this.transaction.sendStatus(httpCodes.Gone);
+		});
 	}
 }

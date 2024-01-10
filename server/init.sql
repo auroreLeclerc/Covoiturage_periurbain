@@ -24,10 +24,10 @@ CREATE TABLE driver (
 
 CREATE TABLE travel (
 	`id` int NOT NULL UNIQUE AUTO_INCREMENT PRIMARY KEY,
-	`driver` VARCHAR(320) REFERENCES driver(mail),
+	`driver` VARCHAR(320) REFERENCES driver(mail) ON DELETE CASCADE,
 	`departure` text NOT NULL DEFAULT "N/A",
 	`arrival` text NOT NULL DEFAULT "N/A",
-	`places` int NOT NULL,
+	`seats` int NOT NULL,
 	`start` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`over` boolean DEFAULT false
 );

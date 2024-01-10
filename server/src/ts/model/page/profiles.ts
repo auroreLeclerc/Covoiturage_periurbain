@@ -8,7 +8,7 @@ export default class Profiles extends PageEnforcedAuth {
 	protected postExecution() {
 		this.database.getProfile(this.token.mail).then(role => {
 			const select = role === "driver" ? ", numberplate, mac" : "";
-			this.database.get(`SELECT name, ${select} FROM cvp.profile INNER JOIN cvp.${role} ON cvp.profile.mail = cvp.${role}.mail WHERE cvp.${role}.mail = ?`, [this.posted.mail]).then(http => {
+			this.database.get(`SELECT name, ${select} FROM profile INNER JOIN ${role} ON profile.mail = ${role}.mail WHERE ${role}.mail = ?`, [this.posted.mail]).then(http => {
 				if (!http.body) {
 					this.transaction.sendStatus(http.code, http.message);
 				}
