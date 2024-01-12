@@ -50,7 +50,7 @@ export default class Travel extends PageEnforcedAuth {
 		});
 	}
 	protected deleteExecution() {
-		this.transaction.sendStatus(httpCodes["Not Implemented"]);
+		this.transaction.sendStatus(httpCodes["Not Implemented"]); //TODO: passager voyage terminé
 	}
 	protected patchExecution() {
 		this.database.get(
