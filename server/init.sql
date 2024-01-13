@@ -28,7 +28,8 @@ CREATE TABLE travel (
 	`departure` text NOT NULL DEFAULT "N/A",
 	`arrival` text NOT NULL DEFAULT "N/A",
 	`seats` int NOT NULL,
-	`start` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`registered` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`start` datetime DEFAULT NULL,
 	`over` boolean DEFAULT false
 );
 

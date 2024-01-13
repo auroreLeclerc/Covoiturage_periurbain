@@ -20,5 +20,9 @@ sudo systemctl start mariadb; mariadb --verbose -u user -p < "init.sql"; npm ci 
     - POST: rechercher un voyage -> departure:text, arrival:text
 - /match (authentifié)
     - POST: s'inscrire à un voyage automatique -> departure:text, arrival:text
+- /state (authentifié)
+    - GET: NULL si le voyage n'est pas commencé sinon l'heure de début de voyage
+    - PATCH: commencer un voyage -> void
+    - DELETE: finir un voyage -> void
 
 ![Diagramme de classe](./src/img/Diagramme_de_classe_cvp.png)

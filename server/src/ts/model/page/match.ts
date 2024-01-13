@@ -7,7 +7,7 @@ export default class Match extends PageEnforcedAuth {
 	}
 	protected postExecution() {
 		this.database.get(
-			"SELECT travel.driver, travel.id, travel.seats, driver.mac, driver.numberplate, passenger.name, passenger.mail FROM travel INNER JOIN driver ON travel.driver=driver.mail INNER JOIN profile ON travel.mail=profile.mail WHERE travel.departure=? AND travel.arrival=?",
+			"SELECT travel.driver, travel.id, travel.seats, driver.mac, driver.numberplate, profile.name FROM travel INNER JOIN driver ON travel.driver=driver.mail INNER JOIN profile ON driver.mail=profile.mail WHERE travel.departure=? AND travel.arrival=?",
 			[this.posted.departure, this.posted.arrival]
 		).then(http => {
 			if (http.body) {
@@ -26,7 +26,7 @@ export default class Match extends PageEnforcedAuth {
 					else this.transaction.sendStatus(httpCodes.Gone);
 				});
 			}
-			else this.transaction.sendStatus(httpCodes.Gone);
+			else this.transaction.sendStatus(httpCodes["No Content"]);
 		});
 	}
 	protected putExecution() {

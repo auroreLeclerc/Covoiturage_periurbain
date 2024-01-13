@@ -7,7 +7,7 @@ export default class Travel extends PageEnforcedAuth {
 			switch (role) {
 			case "driver":
 				this.database.get(
-					"SELECT `driver`, `departure`, `arrival`, `start`, `seats`, `over` FROM travel WHERE driver=?",
+					"SELECT `passenger.mail`, `travel.departure`, `travel.arrival`, `travel.registered`, `travel.start`, `travel.seats`, `travel.over` FROM travel INNER JOIN passenger ON travel.id=passenger.travel_id WHERE travel.driver=?",
 					[this.token.mail]
 				).then(http => {
 					if (!http.body) {
@@ -18,7 +18,7 @@ export default class Travel extends PageEnforcedAuth {
 				break;
 			case "passenger":
 				this.database.get(
-					"SELECT `driver`, `departure`, `arrival`, `start`, `over`, `seats` FROM travel INNER JOIN passenger ON travel.id=passenger.travel_id WHERE passenger.mail=?",
+					"SELECT `driver`, `departure`, `arrival`, `registered`, `start`, `over`, `seats` FROM travel INNER JOIN passenger ON travel.id=passenger.travel_id WHERE passenger.mail=?",
 					[this.token.mail]
 				).then(http => {
 					if (!http.body) {
@@ -32,7 +32,7 @@ export default class Travel extends PageEnforcedAuth {
 	}
 	protected postExecution() {
 		this.database.get(
-			"SELECT id, driver, start, seats FROM travel WHERE departure=? AND arrival=?",
+			"SELECT id, driver, registered, start, seats FROM travel WHERE departure=? AND arrival=?",
 			[this.posted.departure, this.posted.arrival]
 		).then(http => {
 			if (!http.body) {
