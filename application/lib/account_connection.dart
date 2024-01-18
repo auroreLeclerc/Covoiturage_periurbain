@@ -1,4 +1,4 @@
-import "dart:convert";
+  import "dart:convert";
 
 import "package:covoiturage_periurbain/map_page.dart";
 import "package:email_validator/email_validator.dart";
@@ -70,11 +70,15 @@ class AccountConnectionState extends State<AccountConnection> {
                         body: jsonEncode(toSend),
                       )
                       .then((response) {
+                        print("Response status: ${response.statusCode}");
+                        print("Response body: ${response.body}");
                         if (response.statusCode == 200) {
                           http.get(Uri.parse('http://10.0.2.2:4443/account'), headers: <String, String>{
                             'Content-Type': 'application/json; charset=UTF-8',
                             'Authorization': response.body
                           }).then((responseGet) {
+                            print("Response status: ${responseGet.statusCode}");
+                            print("Response body: ${responseGet.body}");
                             final userData = jsonDecode(responseGet.body);
                             Navigator.push(context, MaterialPageRoute(builder: (context) => MapPage(userData: {
                               'name': userData["name"],
