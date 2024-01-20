@@ -254,45 +254,44 @@ Future<void> enableBackgroundExecution() async {
 //Partie Passager
 //Partie Inscription à un voyage
 
-Future<void> _sendPassengerResponseToServer(Map<String, dynamic>? _userData) async {
+Future<void> _sendPassengerResponseToServer(Map<String, dynamic>? userData) async {
   try {
     Timer.periodic(Duration(seconds: 10), (Timer timer) async {
-    if (_userData != null && _userData['id'] != null) {
-      String id = _userData['id'];
+      if (userData != null && userData['id'] != null) {
+        // Inscrire le passager à un voyage
+        var response = await http.post(
+          Uri.parse('http://10.0.2.2:4443/match'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode({
+            'userdata': userData,
+            'departure': "Amiens",
+            'arrival': "Paris"
+          }),
+        );
 
-      // Inscrire le passager à un voyage
-      var response = await http.post(
-        Uri.parse('http://10.0.2.2:4443/match'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        // A changer pour être plus précis et réel
-        body: jsonEncode({
-          'userdata' : _userData,
-          'departure' : "Amiens",
-          'arrival' : "Paris"
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        if (data != null) {
-          _showNotification(data);
-          timer.cancel(); // Arrêter le timer si un match est trouvé
+        if (response.statusCode == 200) {
+          var data = jsonDecode(response.body);
+          if (data != null && data['driverMacAddress'] != null) {
+            String adresseMACConducteur = data['driverMacAddress'];
+            _showNotification(data);
+            timer.cancel(); // Arrêter le timer si un match est trouvé
+            // Continuez avec le traitement de l'adresse MAC du conducteur
+            _checkVoyageConducteur(adresseMACConducteur);
+          }
+        } else {
+          print('Erreur lors de l\'inscription au voyage: ${response.body}');
         }
       } else {
-        print('Erreur lors de l\'inscription au voyage: ${response.body}');
+        print('Erreur : Les données utilisateur sont manquantes ou incomplètes.');
       }
-    } else {
-      print('Erreur : Les données utilisateur sont manquantes ou incomplètes.');
-    }
     });
-  }
-        catch (e) {
+  } catch (e) {
     print('Erreur lors de l\'envoi des informations de passager: $e');
-
   }
 }
+
 
 //Verification du voyage
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin(); // Ajouté pour les notifications
@@ -321,6 +320,7 @@ void onNotificationClick(Map<String, dynamic> driverInfo) {
 class DriverInfoPage extends StatelessWidget {
   final Map<String, dynamic> driverInfo;
 
+  // Assurez-vous que le constructeur est correctement déclaré avec 'Key? key'
   DriverInfoPage({Key? key, required this.driverInfo}) : super(key: key);
 
   @override
@@ -342,6 +342,116 @@ class DriverInfoPage extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+//Partie Voyage qui vient de _sendPassengerResponseToServer
+
+Timer? _voyageCheckTimer;
+Duration totalDetectionDuration = Duration();
+DateTime? scanStartTime;
+
+void _checkVoyageConducteur(String adresseMACConducteur) {
+  scanStartTime = DateTime.now();
+  _voyageCheckTimer = Timer.periodic(Duration(seconds: 5), (Timer timer) async {
+    // Implémentez ici votre logique de scan Bluetooth
+    bool isConducteurNearby = await scanForConducteur(adresseMACConducteur);
+
+    if (isConducteurNearby) {
+      totalDetectionDuration += Duration(seconds: 5);
+    }
+
+    if (DateTime.now().difference(scanStartTime!).inMinutes >= 10) {
+      if (totalDetectionDuration.inMinutes >= 7) {
+        _sendVoyageStart(adresseMACConducteur);
+        timer.cancel();
+      } else {
+        // Réinitialiser pour la prochaine fenêtre de 10 minutes
+        totalDetectionDuration = Duration();
+        scanStartTime = DateTime.now();
+      }
+    }
+  });
+}
+
+Future<bool> scanForConducteur(String adresseMACConducteur) async {
+  bool conducteurFound = false;
+
+  // Créer un listener pour le stream de scan
+  var subscription = flutterBlue.scan(timeout: Duration(seconds: 4)).listen((scanResult) {
+    // Vérifier si l'adresse MAC du conducteur est trouvée
+    if (scanResult.device.id.id == adresseMACConducteur) {
+      conducteurFound = true;
+    }
+  });
+
+  // Attendre la fin du scan
+  await Future.delayed(Duration(seconds: 4));
+
+  // Annuler l'abonnement au stream pour arrêter le scan
+  await subscription.cancel();
+
+  return conducteurFound;
+}
+
+
+
+
+Future<void> _sendVoyageStart(String adresseMACConducteur) async {
+  try {
+    var response = await http.patch(
+      Uri.parse('http://10.0.2.2:4443/state'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      // Ajoutez les données nécessaires dans le corps de la requête
+    );
+
+    if (response.statusCode == 200) {
+      // Gérez la réponse du serveur
+      _checkVoyageEnd(adresseMACConducteur); // Passez à la vérification de la fin du voyage
+    } else {
+      print('Erreur lors du démarrage du voyage: ${response.body}');
+    }
+  } catch (e) {
+    print('Erreur lors de l\'envoi du démarrage du voyage: $e');
+  }
+}
+
+Timer? _voyageEndCheckTimer;
+DateTime? lastDetectionTime;
+
+void _checkVoyageEnd(String adresseMACConducteur) {
+  _voyageEndCheckTimer = Timer.periodic(Duration(seconds: 5), (Timer timer) async {
+    bool isConducteurNearby = await scanForConducteur(adresseMACConducteur);
+
+    if (isConducteurNearby) {
+      lastDetectionTime = DateTime.now();
+    } else if (lastDetectionTime != null && DateTime.now().difference(lastDetectionTime!).inMinutes >= 5) {
+      _sendVoyageEnd();
+      timer.cancel();
+    }
+  });
+}
+
+
+Future<void> _sendVoyageEnd() async {
+  try {
+    var response = await http.delete(
+      Uri.parse('http://10.0.2.2:4443/state'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      // Ajoutez les données nécessaires dans le corps de la requête
+    );
+
+    if (response.statusCode == 200) {
+      // Gérez la réponse du serveur
+    } else {
+      print('Erreur lors de la fin du voyage: ${response.body}');
+    }
+  } catch (e) {
+    print('Erreur lors de l\'envoi de la fin du voyage: $e');
   }
 }
 
@@ -435,7 +545,7 @@ class PassengerInfoPage extends StatelessWidget {
             Text('Email: ${passengerInfo['email'] ?? 'Non disponible'}'),
             Text('Adresse: ${passengerInfo['address'] ?? 'Non disponible'}'),
             Text('Téléphone: ${passengerInfo['phone'] ?? 'Non disponible'}'),
-
+            // Ajoutez plus de champs selon vos besoins
           ],
         ),
       ),
