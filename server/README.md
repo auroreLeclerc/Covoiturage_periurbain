@@ -26,3 +26,4 @@ sudo systemctl start mariadb; mariadb --verbose -u user -p < "init.sql"; npm ci 
     - DELETE: finir un voyage -> void
 
 ![Diagramme de classe](./src/img/Diagramme_de_classe_cvp.png)
+![Diagramme de séquence Interaction](./src/img/Diagramme_de_séquence_Interaction.png)
