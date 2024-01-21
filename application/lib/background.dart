@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_background/flutter_background.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:geolocator/geolocator.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -34,7 +33,7 @@ Future<Map<String, dynamic>?> fetchUserData() async {
 }
 
 Future<void> enableBackgroundExecution() async {
-  final androidConfig = FlutterBackgroundAndroidConfig(
+  const androidConfig = FlutterBackgroundAndroidConfig(
     notificationTitle: "Votre Application",
     notificationText: "Exécution en arrière-plan",
     notificationImportance: AndroidNotificationImportance.Default,
@@ -256,7 +255,7 @@ Future<void> enableBackgroundExecution() async {
 
 Future<void> _sendPassengerResponseToServer(Map<String, dynamic>? userData) async {
   try {
-    Timer.periodic(Duration(seconds: 10), (Timer timer) async {
+    Timer.periodic(const Duration(seconds: 10), (Timer timer) async {
       if (userData != null && userData['id'] != null) {
         // Inscrire le passager à un voyage
         var response = await http.post(
@@ -321,13 +320,13 @@ class DriverInfoPage extends StatelessWidget {
   final Map<String, dynamic> driverInfo;
 
   // Assurez-vous que le constructeur est correctement déclaré avec 'Key? key'
-  DriverInfoPage({Key? key, required this.driverInfo}) : super(key: key);
+  const DriverInfoPage({super.key, required this.driverInfo});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Informations du Conducteur'),
+        title: const Text('Informations du Conducteur'),
       ),
       body: Center(
         child: Column(
@@ -348,17 +347,17 @@ class DriverInfoPage extends StatelessWidget {
 //Partie Voyage qui vient de _sendPassengerResponseToServer
 
 Timer? _voyageCheckTimer;
-Duration totalDetectionDuration = Duration();
+Duration totalDetectionDuration = const Duration();
 DateTime? scanStartTime;
 
 void _checkVoyageConducteur(String adresseMACConducteur) {
   scanStartTime = DateTime.now();
-  _voyageCheckTimer = Timer.periodic(Duration(seconds: 5), (Timer timer) async {
+  _voyageCheckTimer = Timer.periodic(const Duration(seconds: 5), (Timer timer) async {
     // Implémentez ici votre logique de scan Bluetooth
     bool isConducteurNearby = await scanForConducteur(adresseMACConducteur);
 
     if (isConducteurNearby) {
-      totalDetectionDuration += Duration(seconds: 5);
+      totalDetectionDuration += const Duration(seconds: 5);
     }
 
     if (DateTime.now().difference(scanStartTime!).inMinutes >= 10) {
@@ -367,7 +366,7 @@ void _checkVoyageConducteur(String adresseMACConducteur) {
         timer.cancel();
       } else {
         // Réinitialiser pour la prochaine fenêtre de 10 minutes
-        totalDetectionDuration = Duration();
+        totalDetectionDuration = const Duration();
         scanStartTime = DateTime.now();
       }
     }
@@ -378,7 +377,7 @@ Future<bool> scanForConducteur(String adresseMACConducteur) async {
   bool conducteurFound = false;
 
   // Créer un listener pour le stream de scan
-  var subscription = flutterBlue.scan(timeout: Duration(seconds: 4)).listen((scanResult) {
+  var subscription = flutterBlue.scan(timeout: const Duration(seconds: 4)).listen((scanResult) {
     // Vérifier si l'adresse MAC du conducteur est trouvée
     if (scanResult.device.id.id == adresseMACConducteur) {
       conducteurFound = true;
@@ -386,7 +385,7 @@ Future<bool> scanForConducteur(String adresseMACConducteur) async {
   });
 
   // Attendre la fin du scan
-  await Future.delayed(Duration(seconds: 4));
+  await Future.delayed(const Duration(seconds: 4));
 
   // Annuler l'abonnement au stream pour arrêter le scan
   await subscription.cancel();
@@ -422,7 +421,7 @@ Timer? _voyageEndCheckTimer;
 DateTime? lastDetectionTime;
 
 void _checkVoyageEnd(String adresseMACConducteur) {
-  _voyageEndCheckTimer = Timer.periodic(Duration(seconds: 5), (Timer timer) async {
+  _voyageEndCheckTimer = Timer.periodic(const Duration(seconds: 5), (Timer timer) async {
     bool isConducteurNearby = await scanForConducteur(adresseMACConducteur);
 
     if (isConducteurNearby) {
@@ -485,7 +484,7 @@ Future<void> _sendVoyageEnd() async {
 
   //requête répétitive pour savoir si un passagé s'est inscrit au voyage
 Future<void> checkForPassengers(String conducteurId) async {
-  Timer.periodic(Duration(seconds: 5), (Timer timer) async {
+  Timer.periodic(const Duration(seconds: 5), (Timer timer) async {
     var response = await http.post(
       Uri.parse('http://10.0.2.2:4443/travel'),
       headers: <String, String>{
@@ -529,13 +528,13 @@ void onConducteurNotificationClick(Map<String, dynamic> passengerInfo) {
 class PassengerInfoPage extends StatelessWidget {
   final Map<String, dynamic> passengerInfo;
 
-  PassengerInfoPage({Key? key, required this.passengerInfo}) : super(key: key);
+  const PassengerInfoPage({super.key, required this.passengerInfo});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Informations du Passager'),
+        title: const Text('Informations du Passager'),
       ),
       body: Center(
         child: Column(

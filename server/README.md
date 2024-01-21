@@ -8,7 +8,7 @@ sudo systemctl start mariadb; mariadb --verbose -u user -p < "init.sql"; npm ci 
 ## Le serveur supporte les requêtes :
 - /debug (ouvert)
     - GET: page d'interraction
-- /account (GET est authentifié, le reste est ouvert)
+- /account (GET, PATCH sont authentifiés, le reste est ouvert)
     - PUT: créer compte -> mail:email, name:text, password:password, role:driver||passenger
     - PATCH: initialiser le compte -> numberplate:text, mac:text / void
     - POST: obtenir un token de connexion à mettre dans le header Authorization tel quel -> mail:text, password:password
