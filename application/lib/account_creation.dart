@@ -14,21 +14,8 @@ class AccountCreation extends StatefulWidget {
 
 class AccountCreationState extends State<AccountCreation> {
   final _formKey = GlobalKey<FormState>();
-  final list = <DropdownMenuItem<String>>[
-    const DropdownMenuItem(
-      value: "passenger",
-      child: Text("Passager"),
-    ),
-    const DropdownMenuItem(
-      value: "driver",
-      child: Text("Conducteur"),
-    ),
-  ];
   late String mail;
-  late String name;
   late String password;
-  late String? role = list.first.value;
-  late String town;
   late String catUrl = "https://http.cat/images/100.jpg";
 
   @override
@@ -55,13 +42,6 @@ class AccountCreationState extends State<AccountCreation> {
                   onSaved: (String? value) => mail = value!,
                   initialValue: "aurore.leclerc@etud.u-picardie.fr"),
               TextFormField(
-                  validator: (String? value) => value == null || value.isEmpty
-                      ? "Veuillez renseigner ce champ."
-                      : null,
-                  decoration: const InputDecoration(icon: Icon(Icons.person)),
-                  onSaved: (String? value) => name = value!,
-                  initialValue: "Aurore Leclerc"),
-              TextFormField(
                   obscureText: true,
                   obscuringCharacter: "*",
                   validator: (String? value) => value == null || value.isEmpty
@@ -70,38 +50,15 @@ class AccountCreationState extends State<AccountCreation> {
                   decoration: const InputDecoration(icon: Icon(Icons.password)),
                   onSaved: (String? value) => password = value!,
                   initialValue: "password"),
-              DropdownButton<String>(
-                value: role,
-                icon: const Icon(Icons.drive_eta),
-                onChanged: (String? value) {
-                  // This is called when the user selects an item.
-                  setState(() {
-                    role = value!;
-                  });
-                },
-                items: list,
-              ),
-              TextFormField(
-                  validator: (String? value) => value == null || value.isEmpty
-                      ? "Veuillez renseigner ce champ."
-                      : null,
-                  decoration:
-                      const InputDecoration(icon: Icon(Icons.location_city)),
-                  onSaved: (String? value) => town = value!,
-                  initialValue: "Albert"),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
-
                       final Map<String, String> toSend = {
                         "mail": mail,
-                        "name": name,
-                        "password": password,
-                        "role": role.toString(),
-                        "town": town
+                        "password": password
                       };
                       http
                           .put(
@@ -119,12 +76,12 @@ class AccountCreationState extends State<AccountCreation> {
                         if (response.statusCode == 201) {
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Compte créer avec Succès")));
+                              const SnackBar(
+                                  content: Text("Compte créé avec succès.")));
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text(response.body)));
                         }
-
                       }).catchError((error) {
                         setState(() {
                           catUrl = "https://http.cat/images/521.jpg";

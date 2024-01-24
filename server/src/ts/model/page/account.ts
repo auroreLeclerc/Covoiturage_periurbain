@@ -17,6 +17,8 @@ export default class Account extends PageAuth {
 				}
 				else this.transaction.response.end(JSON.stringify(http.body[0]));
 			});
+		}).catch(error => {
+			this.transaction.sendStatus(httpCodes["Upgrade Required"], error.toString());
 		});
 	}
 	/**
@@ -37,7 +39,6 @@ export default class Account extends PageAuth {
 				bcrypt.compare(this.posted.password, String(http.body[0].password)).then(result => {
 					if (result) {
 						const token = jwt.sign({
-							name: this.posted.name,
 							mail: this.posted.mail,
 							creation: new Date()
 						} as Token, this.certificates.key, { algorithm: "RS256" });
@@ -53,8 +54,8 @@ export default class Account extends PageAuth {
 	public put() {
 		bcrypt.hash(this.posted.password, 10).then(hash => {
 			this.database.set(
-				"INSERT INTO profile(name, mail, password, role) VALUES(?, ?, ?, ?)",
-				[this.posted.name, this.posted.mail, hash, this.posted.role]
+				"INSERT INTO profile(mail, password) VALUES(?, ?)",
+				[this.posted.mail, hash]
 			).then(http => {
 				this.transaction.sendStatus(http.code, http.message);
 			});
@@ -70,26 +71,36 @@ export default class Account extends PageAuth {
 		if (this.authenticate()) this.patchExecution();
 	}
 	private patchExecution() {
-		this.database.getProfile(this.token.mail).then(role => {
-			switch (role) {
-			case "driver":
-				this.database.set(
-					"INSERT INTO driver(numberplate, mac, mail) VALUES(?, ?, ?)",
-					[this.posted.numberplate, this.posted.mac, this.token.mail]
-				).then(http => {
-					this.transaction.sendStatus(http.code, http.message);
+		this.database.set(
+			"UPDATE profile SET role=?, name=?, town=?, phone=? WHERE mail=?",
+			[this.posted.role, this.posted.name, this.posted.town, this.posted.phone, this.token.mail]
+		).then(http => {
+			if (http.code === 201) {
+				this.database.getProfile(this.token.mail).then(role => {
+					switch (role) {
+					case "driver":
+						this.database.set(
+							"INSERT INTO driver(numberplate, mac, mail) VALUES(?, ?, ?)",
+							[this.posted.numberplate, this.posted.mac, this.token.mail]
+						).then(http2 => {
+							this.transaction.sendStatus(http2.code, http2.message);
+						});
+						break;
+					
+					case "passenger":
+						this.database.set(
+							"INSERT INTO passenger(mail) VALUES(?)",
+							[this.token.mail]
+						).then(http2 => {
+							this.transaction.sendStatus(http2.code, http2.message);
+						});
+						break;
+					}
+				}).catch(error => {
+					this.transaction.sendStatus(httpCodes["Upgrade Required"], error.toString());
 				});
-				break;
-			
-			case "passenger":
-				this.database.set(
-					"INSERT INTO passenger(mail) VALUES(?)",
-					[this.token.mail]
-				).then(http => {
-					this.transaction.sendStatus(http.code, http.message);
-				});
-				break;
 			}
+			else this.transaction.sendStatus(http.code, http.message);
 		});
 	}
 }

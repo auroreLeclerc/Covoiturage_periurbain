@@ -3,7 +3,6 @@ export interface Certificates {
 	cert: Buffer
 }
 export type Token = {
-	name: string,
 	mail: string,
 	creation: Date
 }

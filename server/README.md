@@ -9,8 +9,8 @@ sudo systemctl start mariadb; mariadb --verbose -u user -p < "init.sql"; npm ci 
 - /debug (ouvert)
     - GET: page d'interraction
 - /account (GET, PATCH sont authentifiés, le reste est ouvert)
-    - PUT: créer compte -> mail:email, name:text, password:password, role:driver||passenger
-    - PATCH: initialiser le compte -> numberplate:text, mac:text / void
+    - PUT: créer compte -> mail:email, password:password
+    - PATCH: initialiser le compte -> name:text, town:text, phone:text, role:driver||passenger +? numberplate:text, mac:text
     - POST: obtenir un token de connexion à mettre dans le header Authorization tel quel -> mail:text, password:password
     - GET: obtenir les infos du compte
 - /travel (authentifié)
@@ -24,6 +24,8 @@ sudo systemctl start mariadb; mariadb --verbose -u user -p < "init.sql"; npm ci 
     - GET: NULL si le voyage n'est pas commencé sinon l'heure de début de voyage
     - PATCH: commencer un voyage -> void
     - DELETE: finir un voyage -> void
+- /stops (non authentifié)
+    - GET: liste des villes avec arrêts
 
 ![Diagramme de classe](./src/img/Diagramme_de_classe_cvp.png)
 ![Diagramme de séquence Interaction](./src/img/Diagramme_de_séquence_Interaction.png)

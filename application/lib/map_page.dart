@@ -53,8 +53,6 @@ class _MapPageState extends State<MapPage> {
   }
 }
 
-
-
 class MapContent extends StatefulWidget {
   const MapContent({super.key});
 
@@ -112,7 +110,7 @@ class _MapContentState extends State<MapContent> {
     } else {
       results = mairiesProches
           .where((mairie) =>
-          mairie.nom.toLowerCase().contains(enteredKeyword.toLowerCase()))
+              mairie.nom.toLowerCase().contains(enteredKeyword.toLowerCase()))
           .toList();
     }
 
@@ -144,7 +142,8 @@ class _MapContentState extends State<MapContent> {
   }
 
   void _launchGoogleMaps(LatLng destination) async {
-    var googleMapsUrl = 'https://www.google.com/maps/search/?api=1&query=${destination.latitude},${destination.longitude}';
+    var googleMapsUrl =
+        'https://www.google.com/maps/search/?api=1&query=${destination.latitude},${destination.longitude}';
     if (await canLaunchUrl(Uri.parse(googleMapsUrl))) {
       await launchUrl(Uri.parse(googleMapsUrl));
     } else {
@@ -175,7 +174,8 @@ class _MapContentState extends State<MapContent> {
             itemBuilder: (context, index) {
               return ListTile(
                 title: Text(mairiesFiltrees[index].nom),
-                subtitle: Text('Distance: ${mairiesFiltrees[index].distance.toStringAsFixed(2)} km'),
+                subtitle: Text(
+                    'Distance: ${mairiesFiltrees[index].distance.toStringAsFixed(2)} km'),
                 trailing: IconButton(
                   icon: const Icon(Icons.map),
                   onPressed: () {

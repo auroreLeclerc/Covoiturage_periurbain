@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'main.dart';
 import 'auth_helper.dart';
 
-
 class AccountDetailsPage extends StatelessWidget {
   final Map<String, dynamic> userData;
 
@@ -12,11 +11,11 @@ class AccountDetailsPage extends StatelessWidget {
 
   Future<void> signOut(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
-    await logout();  // Cela devrait maintenant fonctionner
+    await logout(); // Cela devrait maintenant fonctionner
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const Application()),
-          (Route<dynamic> route) => false,
+      (Route<dynamic> route) => false,
     );
   }
 
@@ -27,8 +26,6 @@ class AccountDetailsPage extends StatelessWidget {
       return null;
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -43,32 +40,38 @@ class AccountDetailsPage extends StatelessWidget {
         ],
       ),
       body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              CircleAvatar(
-                radius: 50,
-                backgroundImage: (getPictureUrl(userData) != null)
-                    ? NetworkImage(getPictureUrl(userData)!)
-                    : null,
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 50,
+              backgroundImage: (getPictureUrl(userData) != null)
+                  ? NetworkImage(getPictureUrl(userData)!)
+                  : null,
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Informations perso',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Prénom',
+                hintText: (userData['name'] == null || userData['name'].isEmpty)
+                    ? ''
+                    : userData['name'],
               ),
-          const SizedBox(height: 20),
-          const Text(
-            'Informations perso',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Prénom',
-                  hintText: (userData['name'] == null || userData['name'].isEmpty) ? '' : userData['name'],
-                ),
+            ),
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Email',
+                hintText:
+                    (userData['email'] == null || userData['email'].isEmpty)
+                        ? ''
+                        : userData['email'],
               ),
-          TextField(
-            decoration: InputDecoration(labelText: 'Email',
-                hintText: (userData['email'] == null || userData['email'].isEmpty) ? '' : userData['email'],
-          ),
-          ),
+            ),
             const TextField(
               decoration: InputDecoration(labelText: 'Numéro de téléphone'),
               keyboardType: TextInputType.phone,

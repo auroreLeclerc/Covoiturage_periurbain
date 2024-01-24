@@ -16,23 +16,13 @@
 			<form action="http://127.0.0.1:4443/account" class="put">
 				<p>Create passenger</p>
 				<input type="email" name="mail" value="aurore.leclerc@etud.u-picardie.fr">
-				<input type="text" name="name" value="Aurore">
 				<input type="password" name="password" value="password">
-				<select name="role">
-					<option value="passenger">passenger</option>
-					<option value="driver">driver</option>
-				</select>
 				<input type="submit" value="Submit">
 			</form>
 			<form action="http://127.0.0.1:4443/account" class="put">
 				<p>Create driver</p>
 				<input type="email" name="mail" value="alan.menet@etud.u-picardie.fr">
-				<input type="text" name="name" value="Alan">
 				<input type="password" name="password" value="password">
-				<select name="role">
-					<option value="driver">driver</option>
-					<option value="passenger">passenger</option>
-				</select>
 				<input type="submit" value="Submit">
 			</form>
 			<form action="http://127.0.0.1:4443/account" class="post">
@@ -48,13 +38,27 @@
 				<input type="submit" value="Submit">
 			</form>
 			<form action="http://127.0.0.1:4443/account" class="patch">
-				<p>Set driver</p>
-				<input type="text" name="numberplate" value="AA-111-AA">
-				<input type="text" name="mac" value="ff:ff:ff:ff:ff:ff">
+				<p>Set passsenger</p>
+				<input type="text" name="name" value="Aurore">
+				<input type="tel" name="phone" value="0666666666">
+				<input type="text" name="town" value="Amiens">
+				<select name="role">
+					<option value="passenger">passenger</option>
+					<option value="driver">driver</option>
+				</select>
 				<input type="submit" value="Submit">
 			</form>
 			<form action="http://127.0.0.1:4443/account" class="patch">
-				<p>Set passsenger</p>
+				<p>Set driver</p>
+				<input type="text" name="name" value="Alan">
+				<input type="tel" name="phone" value="0666666666">
+				<input type="text" name="town" value="Albert">
+				<select name="role">
+					<option value="driver">driver</option>
+					<option value="passenger">passenger</option>
+				</select>
+				<input type="text" name="numberplate" value="AA-111-AA">
+				<input type="text" name="mac" value="ff:ff:ff:ff:ff:ff">
 				<input type="submit" value="Submit">
 			</form>
 			<form action="http://127.0.0.1:4443/account" class="get">
