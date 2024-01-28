@@ -63,7 +63,7 @@ void checkBluetoothAndStartScan() async {
 }
 
 
-void _startPeriodicBluetoothScan(Map<String, dynamic>? _userData) {
+void _startPeriodicBluetoothScan(Map<String, dynamic>? userData) {
   // TEST Pour un passagé qui trouve un arrêt
   _sendNotificationPassager();
 
@@ -110,7 +110,7 @@ void initializeNotifications() {
   );
 }
 
-void _startBluetoothScan(Map<String, dynamic>? _userData) async {
+void _startBluetoothScan(Map<String, dynamic>? userData) async {
   // Vérifier si le scan est déjà en cours et l'arrêter si nécessaire
   print("tentative de scan...");
   if (searchBLE == true) {
@@ -119,7 +119,7 @@ void _startBluetoothScan(Map<String, dynamic>? _userData) async {
     _scanSubscription = flutterBlue
         .scan(timeout: const Duration(seconds: 4))
         .listen((scanResult) {
-      print("role: " + _userData?['role']);
+      print("role: " + userData?['role']);
       if (navigatorKey.currentState != null) {
         // Utilisation de GlobalKey
         ScaffoldMessenger.of(navigatorKey.currentState!.context).showSnackBar(
@@ -133,10 +133,10 @@ void _startBluetoothScan(Map<String, dynamic>? _userData) async {
 
       //Scan Conducteur
       //for (var conducteur in defaultConducteurListe) {
-      if (_userData?['role'] == "driver") {
+      if (userData?['role'] == "driver") {
         print(scanResult.device.id.toString());
         //Si l'appareil scanné est sa balise (présente dans sa voiture)
-        if (scanResult.device.id.toString() == _userData?['mac']) {
+        if (scanResult.device.id.toString() == userData?['mac']) {
           //493
           print("findconducteur");
           _sendNotificationConducteur();
@@ -147,7 +147,7 @@ void _startBluetoothScan(Map<String, dynamic>? _userData) async {
 
       //Scan Arret passagé
       //for (var arret in listeArrets) {
-      if (_userData?['role'] == "passenger") {
+      if (userData?['role'] == "passenger") {
         print(scanResult.device.id.toString());
         //Si l'appareil scanné est un arret Navette
         if (scanResult.device.id.toString() == "FB:86:61:5A:84:6B") {
@@ -430,7 +430,7 @@ FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 
 // Afficher une notification au passagé disant qu'un voyage est trouvé et que le conducteur vient le chercher !
 Future<void> _showNotification(Map<String, dynamic> driverInfo) async {
-  var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+  var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
     'channel_ID',
     'channel_name',
     importance: Importance.max,
@@ -587,7 +587,7 @@ Future<void> _sendVoyageEnd() async {
 
     if (response.statusCode == 200) {
       //Notification de remerciement de fin de voyage
-      var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
         'channel_ID',
         'channel_name',
         importance: Importance.max,
