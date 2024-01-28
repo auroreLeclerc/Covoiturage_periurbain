@@ -11,7 +11,7 @@ export default class Account extends PageAuth {
 	private getExecution() {
 		this.database.getProfile(this.token.mail).then(role => {
 			const select = role === "driver" ? ", numberplate, mac" : ", travel_id";
-			this.database.get(`SELECT ${role}.mail, name, town, phone ${select} FROM profile INNER JOIN ${role} ON profile.mail = ${role}.mail WHERE ${role}.mail = ?`, [this.token.mail]).then(http => {
+			this.database.get(`SELECT ${role}.mail, role, name, town, phone ${select} FROM profile INNER JOIN ${role} ON profile.mail = ${role}.mail WHERE ${role}.mail = ?`, [this.token.mail]).then(http => {
 				if (!http.body) {
 					this.transaction.sendStatus(http.code, http.message);
 				}

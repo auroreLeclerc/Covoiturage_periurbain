@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:covoiturage_periurbain/account_connection.dart';
 import 'package:covoiturage_periurbain/account_creation.dart';
+import 'package:covoiturage_periurbain/user_data.dart';
 import './background.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -15,11 +16,13 @@ import 'dart:async';
 import 'package:permission_handler/permission_handler.dart';
 
 // page de compte
+import 'account_update.dart';
 import 'map_page.dart';
 import 'package:http/http.dart' as http;
+import 'globals.dart' as globals; // fichier pour les variables globales
+
 
 void main() async {
-  GlobalKey<NavigatorState> navigatorKey = GlobalKey();
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
@@ -35,7 +38,7 @@ void main() async {
       ),
       themeMode: ThemeMode.system,
       home: const Application(),
-      navigatorKey: navigatorKey,
+      navigatorKey: globals.navigatorKey,
     ));
   });
 }
@@ -48,8 +51,7 @@ class Application extends StatefulWidget {
 
 class ApplicationAccueil extends State<Application> {
   Map<String, dynamic>? _userData;
-  AccessToken? _accessToken;
-  bool _checking = true;
+  //{name: Jonathan Félix, email: xxx@gmail.fr, id: 1234567890123456}
   String? MACConducteur;
 
   // Définition de la liste des conducteurs
@@ -59,6 +61,8 @@ class ApplicationAccueil extends State<Application> {
   ];
 
   final List<Map<String, String>> listeArrets = [];
+
+
 
   Future<void> getArretsFromServer() async {
     try {
@@ -103,6 +107,7 @@ class ApplicationAccueil extends State<Application> {
   @override
   void initState() {
     super.initState();
+    initializeNotifications();
     requestPermissions();
     getArretsFromServer();
   }
@@ -118,7 +123,6 @@ class ApplicationAccueil extends State<Application> {
     final LoginResult result = await FacebookAuth.instance.login();
 
     if (result.status == LoginStatus.success) {
-      _accessToken = result.accessToken;
 
       final userData = await FacebookAuth.instance.getUserData();
       _userData = userData;
@@ -127,24 +131,17 @@ class ApplicationAccueil extends State<Application> {
       await sendTokenToServer(_userData?['email'], _userData?['name'],
           _userData?['id'], "passenger");
 
-      // Rediriger vers MairieMapPage
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => MapPage(userData: _userData!)),
-      );
+
     } else {
       print(result.status);
       print(result.message);
     }
-    setState(() {
-      _checking = false;
-    });
   }
 
   Future<void> logout() async {
     stopScan();
     await FacebookAuth.instance.logOut();
-    _accessToken = null;
+    print(_userData);
     _userData = null;
     setState(() {});
   }
@@ -175,12 +172,6 @@ class ApplicationAccueil extends State<Application> {
       await sendTokenToServer(
           _userData?['email'], _userData?['name'], _userData?['id'], "driver");
 
-      // Rediriger vers MairieMapPage
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => MapPage(userData: _userData!)),
-      );
-
       return userCredential;
     } catch (e) {
       print('Failed to sign in with Google: $e');
@@ -188,47 +179,38 @@ class ApplicationAccueil extends State<Application> {
     }
   }
 
-  Future<void> sendTokenToServer(
-      String mail, String name, String password, String role) async {
-    try {
-      final Map<String, String> toSend = {
-        "mail": mail,
-        "name": name,
-        "password": password,
-        "role": role.toString(),
-        "town": "Amiens" //Town de Test
-      };
-      http
-          .put(
-        Uri.parse('http://10.0.2.2:4443/account'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(toSend),
-      )
-          .then((response) {
-        if (response.statusCode == 201) {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Compte créer avec Succès")));
-        } else {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(response.body)));
-        }
-      }).catchError((error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString())),
-        );
-      });
-    } catch (e) {
-      print('Erreur lors de l\'envoi du token: $e');
-    }
+  Future<void> sendTokenToServer( String mail, String name, String password, String role) async {
 
+    //Création du compte
     final Map<String, String> toSend = {
       "mail": mail,
-      "password": password,
+      "password": password
     };
+    http
+        .put(
+      Uri.parse('http://10.0.2.2:4443/account'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(toSend),
+    )
+        .then((response) {
+      if (response.statusCode == 201) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text("Compte créé avec succès.")));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(response.body)));
+      }
+    }).catchError((error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString())),
+      );
+    });
 
+    //Connection et initialisation (update)
     http
         .post(
       Uri.parse('http://10.0.2.2:4443/account'),
@@ -238,31 +220,46 @@ class ApplicationAccueil extends State<Application> {
       body: jsonEncode(toSend),
     )
         .then((response) {
-      print('response : $response');
       if (response.statusCode == 200) {
+        globals.authToken = response.body;
         http.get(Uri.parse('http://10.0.2.2:4443/account'),
             headers: <String, String>{
-              'Content-Type': 'application/json; charset=UTF-8',
-              'Authorization': response.body
+              'Content-Type':
+              'application/json; charset=UTF-8',
+              'Authorization': globals.authToken
             }).then((responseGet) {
-          print("Response status: ${responseGet.statusCode}");
-          print("Response body: ${responseGet.body}");
-          final userData = jsonDecode(responseGet.body);
-          print('reçue du serveur: $userData');
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => MapPage(userData: {
-                      'name': userData["name"],
-                      'email': mail,
-                      'id': null,
-                      'token': response.body,
-                    })),
-          );
-        });
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => AccountUpdate(
+                        userData: UserData(
+                            name : name,
+                            email: mail,
+                            token: response.body))));
+
+            final userDataReceived = jsonDecode(responseGet.body);
+
+            Map<String, dynamic> userData = {
+              'name': userDataReceived['name'],
+              'email': mail,
+              'id': null,
+              'token': globals.authToken
+            };
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => MapPage(
+                    userData: userData,
+                  )
+              ),
+            );
+          }
+
+        );
       } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(response.body)));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(response.body)));
       }
     }).catchError((error) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -272,14 +269,12 @@ class ApplicationAccueil extends State<Application> {
 
     print("Initialisation du scan...");
     //Initialisation du scan une fois connecté sous un role
-    checkBluetoothAndStartScan(role);
+    checkBluetoothAndStartScan();
   }
 
   @override
   Widget build(BuildContext context) {
     final randomPhrase = ecoPhrases[Random().nextInt(ecoPhrases.length)];
-    print("Démarrage");
-    print(_userData);
     return Scaffold(
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
@@ -339,13 +334,6 @@ class ApplicationAccueil extends State<Application> {
                   text: "Connecter avec Google",
                   onPressed: () {
                     signInWithGoogle();
-                  },
-                ),
-                SignInButton(
-                  Buttons.Apple,
-                  text: "Connecter avec Apple",
-                  onPressed: () {
-                    // Implémentez la logique de connexion Apple ici
                   },
                 ),
                 SignInButton(

@@ -16,22 +16,23 @@ class AccountUpdate extends StatefulWidget {
 class AccountUpdateState extends State<AccountUpdate> {
   final _formKey = GlobalKey<FormState>();
   final list = <DropdownMenuItem<String>>[
-    const DropdownMenuItem(
-      value: "passenger",
-      child: Text("Passager"),
-    ),
-    const DropdownMenuItem(
-      value: "driver",
-      child: Text("Conducteur"),
-    ),
+    const DropdownMenuItem(value: "passenger", child: Text("Passager")),
+    const DropdownMenuItem(value: "driver", child: Text("Conducteur")),
   ];
+
   late String? name;
-  late String? role = list.first.value;
-  late String? town;
-  late String? phone;
-  late String numberplate;
-  late String mac;
+  late String? role = list.first.value; // Défaut à 'passenger'
+  late String? town = "";
+  late String? phone = "";
+  late String numberplate = "";
+  late String mac = "";
   late String catUrl = "https://http.cat/images/100.jpg";
+
+  @override
+  void initState() {
+    super.initState();
+    name = widget.userData.name ?? "";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,18 +46,16 @@ class AccountUpdateState extends State<AccountUpdate> {
             children: [
               Image.network(catUrl, height: 200),
               TextFormField(
-                  decoration: const InputDecoration(icon: Icon(Icons.person)),
-                  onSaved: (String? value) => name = value!,
-                  initialValue: "Aurore Leclerc"),
-              DropdownButton<String>(
+                decoration: const InputDecoration(icon: Icon(Icons.person)),
+                onSaved: (String? value) => name = value,
+                initialValue: name,
+              ),
+              DropdownButtonFormField<String>(
                 value: role,
                 icon: const Icon(Icons.drive_eta),
-                onChanged: (String? value) {
-                  setState(() {
-                    role = value!;
-                  });
-                },
+                onChanged: (String? value) => setState(() => role = value),
                 items: list,
+                onSaved: (String? value) => role = value,
               ),
               TextFormField(
                   decoration:
