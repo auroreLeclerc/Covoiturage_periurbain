@@ -2,12 +2,12 @@ import { httpCodes } from "../../HttpTransaction.js";
 import { PageEnforcedAuth } from "../PageEnforcedAuth.js";
 
 export default class Travel extends PageEnforcedAuth {
-	protected getExecution() { //FIXME: Not Working
+	protected getExecution() {
 		this.database.getProfile(this.token.mail).then(role => {
 			switch (role) {
 			case "driver":
 				this.database.get(
-					"SELECT `passenger.mail`, `travel.departure`, `travel.arrival`, `travel.registered`, `travel.start`, `travel.seats`, `travel.over` FROM travel INNER JOIN passenger ON travel.id=passenger.travel_id WHERE travel.driver=?",
+					"SELECT `mail`, `departure`, `arrival`, `registered`, `start`, `seats`, `over` FROM travel INNER JOIN passenger ON travel.id=passenger.travel_id WHERE travel.driver=?",
 					[this.token.mail]
 				).then(http => {
 					if (!http.body) {
@@ -50,7 +50,7 @@ export default class Travel extends PageEnforcedAuth {
 		});
 	}
 	protected deleteExecution() {
-		this.transaction.sendStatus(httpCodes["Not Implemented"]); //TODO: passager voyage terminé
+		this.transaction.sendStatus(httpCodes["Permanent Redirect"], "/state");
 	}
 	protected patchExecution() {
 		this.database.get(

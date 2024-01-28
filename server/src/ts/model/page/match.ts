@@ -15,10 +15,10 @@ export default class Match extends PageEnforcedAuth {
 					"SELECT COUNT(passenger.travelling), travel.seats FROM travel INNER JOIN passenger ON travel.id=passenger.travel_id WHERE travel.id=?",
 					[http.body[0].id]
 				).then(http2 => {
-					if (http2.body && (Number(http2.body[0]["COUNT(passenger.travelling)"]) < Number(http2.body[0].seats) || Number(http2.body[0]["COUNT(passenger.travelling)"]) === 0)) {
+					if (http.body?.length && http2.body && (Number(http2.body[0]["COUNT(passenger.travelling)"]) < Number(http2.body[0].seats) || Number(http2.body[0]["COUNT(passenger.travelling)"]) === 0)) {
 						this.database.set(
 							"UPDATE passenger SET travel_id=?, travelling=? WHERE mail=?",
-							[this.posted.travel_id, true, this.token.mail]
+							[http.body[0].id, true, this.token.mail]
 						).then(http3 => {
 							this.transaction.sendStatus(http3.code, JSON.stringify(http));
 						});
