@@ -57,7 +57,7 @@ export default class Travel extends PageEnforcedAuth {
 			"SELECT COUNT(passenger.travelling), travel.seats FROM travel INNER JOIN passenger ON travel.id=passenger.travel_id WHERE travel.id=?",
 			[this.posted.travel_id]
 		).then(http => {
-			if (http.body && (Number(http.body[0]["COUNT(passenger.travelling)"]) < Number(http.body[0].seats) || Number(http.body[0]["COUNT(passenger.travelling)"]) === 0)) {
+			if (http.body?.length && (Number(http.body[0]["COUNT(passenger.travelling)"]) < Number(http.body[0].seats) || Number(http.body[0]["COUNT(passenger.travelling)"]) === 0)) {
 				this.database.set(
 					"UPDATE passenger SET travel_id=?, travelling=? WHERE mail=?",
 					[this.posted.travel_id, true, this.token.mail]

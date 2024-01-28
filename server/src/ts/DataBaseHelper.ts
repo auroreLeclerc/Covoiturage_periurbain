@@ -52,10 +52,18 @@ export class DataBaseHelper {
 		}
 		return this.connection.query(request, values).then(result => {
 			console.log(result);
-			return {
-				code: httpCodes.Created,
-				message: "Created"
-			};
+			if (result.affectedRows) {
+				return {
+					code: httpCodes.Created,
+					message: "Created"
+				};
+			}
+			else {
+				return {
+					code: httpCodes["No Content"],
+					message: "No rows affected"
+				};
+			}
 		}).catch(error => {
 			console.error(error.sqlMessage);
 			switch (error.code) {

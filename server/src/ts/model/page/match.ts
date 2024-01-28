@@ -10,7 +10,7 @@ export default class Match extends PageEnforcedAuth {
 			"SELECT travel.driver, travel.id, travel.seats, driver.mac, driver.numberplate, profile.name FROM travel INNER JOIN driver ON travel.driver=driver.mail INNER JOIN profile ON driver.mail=profile.mail WHERE travel.departure=? AND travel.arrival=?",
 			[this.posted.departure, this.posted.arrival]
 		).then(http => {
-			if (http.body) {
+			if (http.body?.length) {
 				this.database.get(
 					"SELECT COUNT(passenger.travelling), travel.seats FROM travel INNER JOIN passenger ON travel.id=passenger.travel_id WHERE travel.id=?",
 					[http.body[0].id]
