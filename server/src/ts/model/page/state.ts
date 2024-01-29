@@ -24,9 +24,10 @@ export default class State extends PageEnforcedAuth {
 	}
 	protected deleteExecution() {
 		this.database.getProfile(this.token.mail).then(role => {
-			const where = role === "driver" ? "WHERE driver=?" : "INNER JOIN passenger ON travel.id=passenger.travel_id WHERE passenger.mail=?";
+			const join = role === "driver" ? "" : "INNER JOIN passenger ON travel.id=passenger.travel_id";
+			const where = role === "driver" ? "driver=?" : "passenger.mail=?";
 			this.database.set(
-				"UPDATE travel SET over=? " + where,
+				"UPDATE travel " + join + " SET over=? WHERE " + where,
 				[true, this.token.mail]
 			).then(http => {
 				this.transaction.sendStatus(http.code, http.message);
