@@ -29,7 +29,7 @@ CREATE TABLE profile (
 
 CREATE TABLE driver (
 	`mail` VARCHAR(320) REFERENCES profile(mail) ON DELETE CASCADE,
-	`passengers` int NOT NULL,
+	`passengers` int DEFAULT 0,
 	`numberplate` text NOT NULL,
 	`mac` VARCHAR(17) NOT NULL
 );

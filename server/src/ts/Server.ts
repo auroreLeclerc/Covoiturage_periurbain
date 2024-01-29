@@ -45,7 +45,7 @@ export class Server {
 				} catch (error) {
 					for (const element of body.split("&")) {
 						const splited = element.split("=");
-						posted[splited[0]] = splited[1];
+						posted[splited[0]] = decodeURIComponent(splited[1]);
 					}
 				}
 
