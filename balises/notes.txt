@@ -1,0 +1,12 @@
+A Savoir : Conducteur :
+491 D5:3E:21:C4:23:D0
+492 C5:9D:7D:7B:83:01
+493 D5:42:AA:EB:8F:07
+494 D5:05:C9:41:03:89
+
+
+
+Arrêts : (récuppérable avec GET /stops)
+[{id:496, mac:"FB:86:61:5A:84:6B", departure:"Rivery", arrival:"Amiens"},
+{id:497, mac: "D7:07:FC:B6:E4:E7", departure:"Camon", arrival:"Amiens"},
+{id:498 CA:0B:99:7B:2B:F7, departure:"Dury", arrival:"Amiens"}]

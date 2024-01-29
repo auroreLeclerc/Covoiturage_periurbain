@@ -51,49 +51,9 @@ class Application extends StatefulWidget {
 
 class ApplicationAccueil extends State<Application> {
   Map<String, dynamic>? _userData;
-  //{name: Jonathan Félix, email: xxx@gmail.fr, id: 1234567890123456}
+  //_userData = {name: Jonathan Félix, email: xxx@gmail.fr, id: 1234567890123456}
   String? MACConducteur;
 
-  // Définition de la liste des conducteurs
-  final List<Map<String, String>> defaultConducteurListe = [
-    {"id": "491", "MAC": "D5:3E:21:C4:23:D0"},
-    {"id": "494", "MAC": "D5:05:C9:41:03:89"}
-  ];
-
-  final List<Map<String, String>> listeArrets = [];
-
-
-
-  Future<void> getArretsFromServer() async {
-    try {
-      final response = await http.get(
-        Uri.parse('http://10.0.2.2:4443/stops'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final responseBody = jsonDecode(response.body);
-        // Supposons que les arrêts sont retournés sous forme d'une liste de maps
-        List<dynamic> arretsList = responseBody['arrets'];
-
-        setState(() {
-          listeArrets.clear();
-          for (var arret in arretsList) {
-            listeArrets.add(Map<String, String>.from(arret));
-          }
-        });
-
-        print('Liste des arrêts reçue du serveur.');
-      } else {
-        print(
-            'Erreur lors de la requête au serveur pour obtenir les arrêts: ${response.body}');
-      }
-    } catch (e) {
-      print('Erreur lors de la récupération des arrêts: $e');
-    }
-  }
 
   void requestPermissions() async {
     await [
@@ -109,7 +69,6 @@ class ApplicationAccueil extends State<Application> {
     super.initState();
     initializeNotifications();
     requestPermissions();
-    getArretsFromServer();
   }
 
   final List<String> ecoPhrases = [

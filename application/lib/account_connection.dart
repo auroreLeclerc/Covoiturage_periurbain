@@ -66,34 +66,28 @@ class AccountConnectionState extends State<AccountConnection> {
                         "mail": mail,
                         "password": password,
                       };
-                      http
-                          .post(
+                      http.post(
                         Uri.parse('http://10.0.2.2:4443/account'),
                         headers: <String, String>{
                           'Content-Type': 'application/json; charset=UTF-8',
                         },
                         body: jsonEncode(toSend),
-                      )
-                          .then((response) {
+                      ).then((response) {
                         print("Response status: ${response.statusCode}");
                         print("Response body: ${response.body}");
                         if (response.statusCode == 200) {
                           globals.authToken = response.body;
-                          http.get(Uri.parse('http://10.0.2.2:4443/account'),
+                          http.get(
+                              Uri.parse('http://10.0.2.2:4443/account'),
                               headers: <String, String>{
-                                'Content-Type':
-                                    'application/json; charset=UTF-8',
+                                'Content-Type': 'application/json; charset=UTF-8',
                                 'Authorization': globals.authToken
-                              }).then((responseGet) {
-                            if (responseGet.statusCode == 426) {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => AccountUpdate(
-                                          userData: UserData(
-                                              email: mail,
-                                              token: response.body))));
-                            } else {
+                              }
+                          ).then((responseGet) {
+                            print("responseGet status: ${responseGet.statusCode}");
+                            print("responseGet body: ${responseGet.body}");
+                            if (responseGet.statusCode != 426) {
+                              // Logique pour gérer une réponse valide
                               final userDataReceived = jsonDecode(responseGet.body);
 
                               Map<String, dynamic> userData = {
@@ -110,16 +104,29 @@ class AccountConnectionState extends State<AccountConnection> {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => MapPage(
-                                      userData: userData, // Passez _userData au lieu de recréer l'objet
+                                      userData: userData,
                                     )
                                 ),
                               );
+                            } else {
+                              // Rediriger vers AccountUpdate si la réponse est vide
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => AccountUpdate(
+                                          userData: UserData(
+                                              email: mail,
+                                              token: response.body
+                                          )
+                                      )
+                                  )
+                              );
                             }
-
                           });
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(response.body)));
+                              SnackBar(content: Text(response.body))
+                          );
                         }
                       }).catchError((error) {
                         ScaffoldMessenger.of(context).showSnackBar(

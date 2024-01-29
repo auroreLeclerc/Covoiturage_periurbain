@@ -21,6 +21,8 @@ Map<String, dynamic>? _userData;
 GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 String authToken = globals.authToken ;
 Map<String, dynamic>? driverInfo;
+List listeArrets = [];
+String ArretProche = "";
 
 Future<Map<String, dynamic>?> fetchUserData() async {
   final response = await http.get(
@@ -36,6 +38,33 @@ Future<Map<String, dynamic>?> fetchUserData() async {
   } else {
     print('Failed to load user data');
     return null;
+  }
+}
+
+Future<List> getArretsFromServer() async {
+  try {
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:4443/stops'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final responseBody = jsonDecode(response.body);
+      // responseBody = [{id: 496, departure: Rivery, arrival: Amiens, mac: FB:86:61:5A:84:6B},
+      // {id: 497, departure: Camon, arrival: Amiens, mac: D7:07:FC:B6:E4:E7},
+      // {id: 498, departure: Dury, arrival: Amiens, mac: CA:0B:99:7B:2B:F7}]
+      print('Liste des arrêts reçue du serveur.');
+      print(responseBody);
+      return responseBody;
+    } else {
+      print('Erreur lors de la requête au serveur pour obtenir les arrêts: ${response.body}');
+    }
+    return [];
+  } catch (e) {
+    print('Erreur lors de la récupération des arrêts: $e');
+    return [];
   }
 }
 
@@ -55,6 +84,7 @@ void checkBluetoothAndStartScan() async {
   if (await flutterBlue.isOn) {
     print("On va récupérer userData");
       _userData = await fetchUserData();
+      listeArrets = await getArretsFromServer();
       print(_userData);
      _startPeriodicBluetoothScan(_userData);
   } else {
@@ -64,16 +94,17 @@ void checkBluetoothAndStartScan() async {
 
 
 void _startPeriodicBluetoothScan(Map<String, dynamic>? userData) {
-  // TEST Pour un passagé qui trouve un arrêt
-  _sendNotificationPassager();
+
+
+  // TEST Pour un passagé qui trouve un arrêt (pris au pif)
+  _sendNotificationPassager(listeArrets[1]);
 
   //TEST Pour un conducteur qui truve SA balise
   //_sendNotificationConducteur();
   //A DES FINS DE TESTS, LE SCAN DES BALISES EST DESACTIVE .
   //_scanTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
     //print("test");
-
-     //_startBluetoothScan(_userData);
+    //_startBluetoothScan(_userData);
   //});
 }
 
@@ -130,34 +161,28 @@ void _startBluetoothScan(Map<String, dynamic>? userData) async {
         );
       }
 
-
       //Scan Conducteur
-      //for (var conducteur in defaultConducteurListe) {
       if (userData?['role'] == "driver") {
         print(scanResult.device.id.toString());
-        //Si l'appareil scanné est sa balise (présente dans sa voiture)
-        if (scanResult.device.id.toString() == userData?['mac']) {
-          //493
-          print("findconducteur");
+        if (scanResult.device.id.toString().toUpperCase() ==
+            userData?['mac'].toUpperCase()) {
           _sendNotificationConducteur();
-          //break;
-          //}
         }
       }
 
+
       //Scan Arret passagé
-      //for (var arret in listeArrets) {
       if (userData?['role'] == "passenger") {
         print(scanResult.device.id.toString());
-        //Si l'appareil scanné est un arret Navette
-        if (scanResult.device.id.toString() == "FB:86:61:5A:84:6B") {
-          //496
-          print("findpassager");
-          _sendNotificationPassager();
-          //break;
+        for (var arret in listeArrets) {
+          if (scanResult.device.id.toString().toUpperCase() == arret['mac'].toUpperCase()) {
+            print("Arrêt trouvé: ${arret['id']}");
+            _sendNotificationPassager(arret);
+            break; // Sortir de la boucle une fois l'arrêt trouvé
+          }
         }
+
       }
-      //}
     });
   }
 }
@@ -197,37 +222,35 @@ void _sendNotificationConducteur() async {
   );
 }
 
+    Future<void> _sendNotificationPassager(Map<String, dynamic> arret) async {
+      var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+        'channel_ID',
+        'channel_name',
+        importance: Importance.max,
+        priority: Priority.high,
+        ticker: 'ticker',
+        icon: 'icon_notification', // Référence à l'icône dans le dossier drawable
+      );
+
+      var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+
+      String title = 'Arrêt Approchant 🚌'; // Exemple de titre
+      String body = 'Votre arrêt à ${arret['departure']} pour ${arret['arrival']} est proche!'; // Utilisation des informations de l'arrêt
+      ArretProche = jsonEncode(arret);
+      print("notification passager send");
+
+      await flutterLocalNotificationsPlugin.show(
+          3, // Assurez-vous que l'ID de la notification est unique
+          title, // Titre de la notification
+          body, // Corps de la notification
+          platformChannelSpecifics,
+          payload: 'reponse_passager' // Pas besoin de payload pour cette notification
+      );
+    }
 
 
 
-void _sendNotificationPassager() async {
-  var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-    'channel_ID',
-    'channel_name',
-    importance: Importance.max,
-    priority: Priority.high,
-    ticker: 'ticker',
-    icon: 'icon_notification', // Référence à l'icône dans le dossier drawable
-    additionalFlags: Int32List.fromList(<int>[4]), // FLAG_AUTO_CANCEL
-  );
-
-  var platformChannelSpecifics =
-      NotificationDetails(android: androidPlatformChannelSpecifics);
-
-  print("notification passagé send");
-  //_stopScan();
-
-  await fltrNotification.show(
-    0,
-    'Arrêt trouvé !',
-    'Cherchez vous un chauffeur ?',
-    platformChannelSpecifics,
-    payload: 'reponse_passager',
-  );
-}
-
-
-Future _onSelectNotification(String? payload, BuildContext context) async {
+    Future _onSelectNotification(String? payload, BuildContext context) async {
   print("Notification traitée avec payload: $payload");
   if (payload == 'chauffeur') {
     TextEditingController departEditingController = TextEditingController();
@@ -285,8 +308,12 @@ Future _onSelectNotification(String? payload, BuildContext context) async {
   }
 
   else if (payload == 'reponse_passager') {
-    TextEditingController departEditingController = TextEditingController();
-    TextEditingController arriveeEditingController = TextEditingController();
+    // Décoder le payload pour obtenir les informations de l'arrêt
+    Map<String, dynamic> arret = jsonDecode(ArretProche);
+
+    // Initialiser les TextEditingController avec les données de l'arrêt
+    TextEditingController departEditingController = TextEditingController(text: arret['departure'].toString().toUpperCase());
+    TextEditingController arriveeEditingController = TextEditingController(text: arret['arrival'].toString().toUpperCase());
 
     // Afficher une boîte de dialogue pour demander la réponse de l'utilisateur
     Map<String, dynamic>? result = await showDialog<Map<String, dynamic>>(
@@ -302,21 +329,21 @@ Future _onSelectNotification(String? payload, BuildContext context) async {
               decoration: const InputDecoration(
                 labelText: 'Départ',
               ),
+              readOnly: true, // Rendre le champ en lecture seule
             ),
             TextField(
               controller: arriveeEditingController,
               decoration: const InputDecoration(
                 labelText: 'Arrivée',
               ),
+              readOnly: true, // Rendre le champ en lecture seule
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () {
-              String depart = departEditingController.text.toUpperCase();
-              String arrivee = arriveeEditingController.text.toUpperCase();
-              Navigator.of(context).pop({'response': true, 'depart': depart, 'arrivee': arrivee});
+              Navigator.of(context).pop({'response': true, 'depart': arret['departure'].toString().toUpperCase(), 'arrivee': arret['arrival'].toString().toUpperCase()});
             },
             child: const Text('OUI'),
           ),
@@ -336,6 +363,7 @@ Future _onSelectNotification(String? payload, BuildContext context) async {
       await _sendPassengerResponseToServer(_userData, result['depart'], result['arrivee']);
     }
   }
+
 
   else if (payload == 'show_conducteur_data') {
     // Afficher une boîte de dialogue avec les informations du conducteur
@@ -392,7 +420,7 @@ Future<void> _sendPassengerResponseToServer(Map<String, dynamic>? userData ,Stri
         if (response.statusCode == 201 || response.statusCode == 200) {
           String jsonString = response.body;
 
-// Trouver l'index où commence le JSON valide
+          // Trouver l'index où commence le JSON valide
           int jsonStartIndex = jsonString.indexOf('{');
           if (jsonStartIndex != -1) {
             // Extraire la partie JSON valide de la chaîne
@@ -516,6 +544,11 @@ void _checkVoyageConducteur(String adresseMACConducteur) {
 }
 
 Future<bool> scanForConducteur(String adresseMACConducteur) async {
+  if (!searchBLE) {
+    return false;
+  }
+
+  searchBLE = false;
   bool conducteurFound = false;
 
   // Créer un listener pour le stream de scan
@@ -534,6 +567,7 @@ Future<bool> scanForConducteur(String adresseMACConducteur) async {
   // Annuler l'abonnement au stream pour arrêter le scan
   await subscription.cancel();
 
+  searchBLE = true;
   return conducteurFound;
 }
 
@@ -546,8 +580,9 @@ Future<void> _sendVoyageStart(String adresseMACConducteur) async {
         'Authorization': authToken,
       },
     );
-
-    if (response.statusCode == 200) {
+    print(response.statusCode);
+    if (response.statusCode == 201) {
+      print("ok");
       _checkVoyageEnd(adresseMACConducteur); // Passez à la vérification de la fin du voyage
     } else {
       print('Erreur lors du démarrage du voyage: ${response.body}');
@@ -561,13 +596,16 @@ Timer? _voyageEndCheckTimer;
 DateTime? lastDetectionTime;
 
 void _checkVoyageEnd(String adresseMACConducteur) {
+  lastDetectionTime = DateTime.now();
   _voyageEndCheckTimer = Timer.periodic(const Duration(seconds: 5), (Timer timer) async {
     bool isConducteurNearby = await scanForConducteur(adresseMACConducteur);
-
+    print("oncheckvoyageEnd?");
+    print(DateTime.now().difference(lastDetectionTime!).inMinutes);
+    print(isConducteurNearby);
     if (isConducteurNearby) {
       lastDetectionTime = DateTime.now();
-    } else if (lastDetectionTime != null &&
-        DateTime.now().difference(lastDetectionTime!).inMinutes >= 5) {
+      //1min d'attente pour la démo
+    } else if (DateTime.now().difference(lastDetectionTime!).inMinutes >= 1) {
       _sendVoyageEnd();
       timer.cancel();
     }
@@ -576,6 +614,7 @@ void _checkVoyageEnd(String adresseMACConducteur) {
 
 Future<void> _sendVoyageEnd() async {
   try {
+    print("FIN DU VOYAGE !");
     var response = await http.delete(
       Uri.parse('http://10.0.2.2:4443/state'),
       headers: <String, String>{
@@ -584,8 +623,8 @@ Future<void> _sendVoyageEnd() async {
       },
       // Ajoutez les données nécessaires dans le corps de la requête
     );
-
-    if (response.statusCode == 200) {
+    print(response.statusCode);
+    if (response.statusCode == 201) {
       //Notification de remerciement de fin de voyage
       var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
         'channel_ID',
