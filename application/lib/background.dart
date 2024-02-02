@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_background/flutter_background.dart';
@@ -223,7 +222,7 @@ void _sendNotificationConducteur() async {
 }
 
     Future<void> _sendNotificationPassager(Map<String, dynamic> arret) async {
-      var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
         'channel_ID',
         'channel_name',
         importance: Importance.max,
@@ -399,7 +398,7 @@ void _sendNotificationConducteur() async {
                 Text('Nom: ${passengerInfo?['name']}'),
                 Text('Email: ${passengerInfo?['driver']}'),
                 // Ici, nous utilisons un ListView.builder pour créer la liste scrollable
-                Container(
+                SizedBox(
                   height: 200, // Définissez une hauteur fixe pour le conteneur
                   child: ListView.builder(
                     itemCount: passengerInfo?['history']?.length ?? 0,
@@ -465,7 +464,7 @@ void _sendNotificationConducteur() async {
                 Text('Email: ${driverInfo?['driver']}'),
                 Text('Plaque: ${driverInfo?['numberplate']}'),
                 // Ici, nous utilisons un ListView.builder pour créer la liste scrollable
-                Container(
+                SizedBox(
                   height: 200, // Définissez une hauteur fixe pour le conteneur
                   child: ListView.builder(
                     itemCount: driverInfo?['history']?.length ?? 0,
