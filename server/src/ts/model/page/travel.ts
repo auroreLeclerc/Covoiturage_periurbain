@@ -7,8 +7,8 @@ export default class Travel extends PageEnforcedAuth {
 			switch (role) {
 			case "driver":
 				this.database.get(
-					"SELECT `mail`, `departure`, `arrival`, `registered`, `start`, `seats`, `over` FROM travel INNER JOIN passenger ON travel.id=passenger.travel_id WHERE travel.driver=?",
-					[this.token.mail]
+					"SELECT `mail`, `departure`, `arrival`, `registered`, `start`, `seats`, `over` FROM travel LEFT JOIN passenger ON travel.id=passenger.travel_id WHERE travel.driver=? AND `over`=?",
+					[this.token.mail, false]
 				).then(http => {
 					if (!http.body) {
 						this.transaction.sendStatus(http.code, http.message);
@@ -18,8 +18,8 @@ export default class Travel extends PageEnforcedAuth {
 				break;
 			case "passenger":
 				this.database.get(
-					"SELECT `driver`, `departure`, `arrival`, `registered`, `start`, `over`, `seats` FROM travel INNER JOIN passenger ON travel.id=passenger.travel_id WHERE passenger.mail=?",
-					[this.token.mail]
+					"SELECT `driver`, `departure`, `arrival`, `registered`, `start`, `over`, `seats` FROM travel INNER JOIN passenger ON travel.id=passenger.travel_id WHERE passenger.mail=? AND `over`=?",
+					[this.token.mail, false]
 				).then(http => {
 					if (!http.body) {
 						this.transaction.sendStatus(http.code, http.message);
@@ -42,7 +42,7 @@ export default class Travel extends PageEnforcedAuth {
 		});
 	}
 	protected putExecution() {
-		this.database.set(
+		this.database.set( // TODO: prevent multiple enrollement
 			"INSERT INTO travel(driver, departure, arrival, seats) VALUES(?, ?, ?, ?)",
 			[this.token.mail, this.posted.departure, this.posted.arrival, this.posted.seats]
 		).then(http => {

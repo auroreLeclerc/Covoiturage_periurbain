@@ -24,14 +24,36 @@ export default class State extends PageEnforcedAuth {
 	}
 	protected deleteExecution() {
 		this.database.getProfile(this.token.mail).then(role => {
-			const join = role === "driver" ? "" : "INNER JOIN passenger ON travel.id=passenger.travel_id";
-			const where = role === "driver" ? "driver=?" : "passenger.mail=?";
-			this.database.set(
-				"UPDATE travel " + join + " SET `over`=? WHERE " + where,
-				[true, this.token.mail]
-			).then(http => { // TODO: reset all the passengers of the travel
-				this.transaction.sendStatus(http.code, http.message);
-			});
+			switch (role) {
+			case "passenger":
+				this.database.get(
+					"SELECT travel_id FROM passenger WHERE mail=?",
+					[this.token.mail]
+				).then(httpTravelId => {
+					if (!httpTravelId.body) this.transaction.sendStatus(httpTravelId.code, httpTravelId.message);
+					else {
+						this.database.set(
+							"UPDATE passenger SET travel_id=? AND travelling=? WHERE travel_id=?",
+							[null, false, httpTravelId.body[0].travel_id]
+						).then(http =>{
+							this.transaction.sendStatus(http.code, http.message);
+						});
+						this.database.set(
+							"UPDATE travel SET `over`=? WHERE id=? AND `over`=?",
+							[true, httpTravelId.body[0].travel_id, true]
+						);
+					}
+				});
+				break;
+			case "driver":
+				this.database.set(
+					"UPDATE travel SET `over`=? WHERE driver=? AND `over`=?",
+					[true, this.token.mail, false]
+				).then(http => {
+					this.transaction.sendStatus(http.code, http.message);
+				});
+				break;
+			}
 		});
 	}
 	protected patchExecution() {
