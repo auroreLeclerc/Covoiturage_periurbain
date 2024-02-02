@@ -26,7 +26,7 @@ class AccountUpdateState extends State<AccountUpdate> {
   late String? phone = "";
   late String numberplate = "";
   late String mac = "";
-  late String catUrl = "https://http.cat/images/100.jpg";
+  // late String catUrl = "https://http.cat/images/100.jpg";
 
   @override
   void initState() {
@@ -38,13 +38,13 @@ class AccountUpdateState extends State<AccountUpdate> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text("Créer un compte"),
+          title: const Text("Initialiser mon compte"),
         ),
         body: Form(
           key: _formKey,
           child: ListView(
             children: [
-              Image.network(catUrl, height: 200),
+              // Image.network(catUrl, height: 200),
               TextFormField(
                 decoration: const InputDecoration(icon: Icon(Icons.person)),
                 onSaved: (String? value) => name = value,
@@ -117,10 +117,9 @@ class AccountUpdateState extends State<AccountUpdate> {
                         body: jsonEncode(toSend),
                       )
                           .then((response) {
-                        setState(() {
-                          catUrl =
-                              "https://http.cat/images/${response.statusCode}.jpg";
-                        });
+                        // setState(() {
+                        //   // catUrl = "https://http.cat/images/${response.statusCode}.jpg";
+                        // });
                         if (response.statusCode == 201) {
                           Navigator.pop(context);
                         } else {
@@ -128,9 +127,9 @@ class AccountUpdateState extends State<AccountUpdate> {
                               SnackBar(content: Text(response.body)));
                         }
                       }).catchError((error) {
-                        setState(() {
-                          catUrl = "https://http.cat/images/521.jpg";
-                        });
+                        // setState(() {
+                        //   // catUrl = "https://http.cat/images/521.jpg";
+                        // });
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text(error.toString())),
                         );
