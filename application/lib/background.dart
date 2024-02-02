@@ -21,6 +21,7 @@ Map<String, dynamic>? _userData;
 GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 String authToken = globals.authToken ;
 Map<String, dynamic>? driverInfo;
+Map<String, dynamic>? passengerInfo;
 List listeArrets = [];
 String ArretProche = "";
 
@@ -94,7 +95,6 @@ void checkBluetoothAndStartScan() async {
 
 
 void _startPeriodicBluetoothScan(Map<String, dynamic>? userData) {
-
 
   // TEST Pour un passagé qui trouve un arrêt (pris au pif)
   _sendNotificationPassager(listeArrets[1]);
@@ -363,10 +363,96 @@ void _sendNotificationConducteur() async {
       await _sendPassengerResponseToServer(_userData, result['depart'], result['arrivee']);
     }
   }
+  else if (payload == 'show_passenger_data') {
+    try {
+      var response = await http.post(
+        Uri.parse('http://10.0.2.2:4443/history'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'mail': passengerInfo?['mail'],
+        }),
+      );
+      print("history");
+      print(response.statusCode);
+      if (response.statusCode == 200) {
+        // Convertir la réponse JSON en liste
+        var historyList = jsonDecode(response.body) as List;
+        passengerInfo?['history'] = historyList;
+      } else {
+        print('Erreur lors du démarrage du voyage: ${response.body}');
+      }
+    } catch (e) {
+      print('Erreur lors de l\'envoi du démarrage du voyage: $e');
+    }
 
+// Afficher une boîte de dialogue avec les informations du conducteur et l'historique des voyages
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Information Passager'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Nom: ${passengerInfo?['name']}'),
+                Text('Email: ${passengerInfo?['driver']}'),
+                // Ici, nous utilisons un ListView.builder pour créer la liste scrollable
+                Container(
+                  height: 200, // Définissez une hauteur fixe pour le conteneur
+                  child: ListView.builder(
+                    itemCount: passengerInfo?['history']?.length ?? 0,
+                    itemBuilder: (context, index) {
+                      var historyItem = passengerInfo?['history'][index];
+                      return ListTile(
+                        title: Text("${historyItem['departure']} -> ${historyItem['arrival']}"),
+                        subtitle: Text("Date: ${historyItem['registered']}"),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Fermer'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   else if (payload == 'show_conducteur_data') {
-    // Afficher une boîte de dialogue avec les informations du conducteur
+    try {
+      var response = await http.post(
+        Uri.parse('http://10.0.2.2:4443/history'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'mail': driverInfo?['mail'],
+        }),
+      );
+      print("history");
+      print(response.statusCode);
+      if (response.statusCode == 200) {
+        // Convertir la réponse JSON en liste
+        var historyList = jsonDecode(response.body) as List;
+        driverInfo?['history'] = historyList;
+      } else {
+        print('Erreur lors du démarrage du voyage: ${response.body}');
+      }
+    } catch (e) {
+      print('Erreur lors de l\'envoi du démarrage du voyage: $e');
+    }
+
+// Afficher une boîte de dialogue avec les informations du conducteur et l'historique des voyages
     await showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -378,7 +464,20 @@ void _sendNotificationConducteur() async {
                 Text('Nom: ${driverInfo?['name']}'),
                 Text('Email: ${driverInfo?['driver']}'),
                 Text('Plaque: ${driverInfo?['numberplate']}'),
-                // Ajoutez d'autres informations ici
+                // Ici, nous utilisons un ListView.builder pour créer la liste scrollable
+                Container(
+                  height: 200, // Définissez une hauteur fixe pour le conteneur
+                  child: ListView.builder(
+                    itemCount: driverInfo?['history']?.length ?? 0,
+                    itemBuilder: (context, index) {
+                      var historyItem = driverInfo?['history'][index];
+                      return ListTile(
+                        title: Text("${historyItem['departure']} -> ${historyItem['arrival']}"),
+                        subtitle: Text("Date: ${historyItem['registered']}"),
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
           ),
@@ -479,35 +578,6 @@ Future<void> _showNotification(Map<String, dynamic> driverInfo) async {
       platformChannelSpecifics,
       payload: 'show_conducteur_data'
   );
-}
-
-//Si le passager clique sur la notification précédente, on le redirige vers une page de résumé du conducteur
-class DriverInfoPage extends StatelessWidget {
-  final Map<String, dynamic>? driverInfo;
-
-  // Assurez-vous que le constructeur est correctement déclaré avec 'Key? key'
-  const DriverInfoPage({super.key, required this.driverInfo});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Informations du Conducteur'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text('Nom: ${driverInfo?['name']}'),
-            Text('Email: ${driverInfo?['email']}'),
-            Text('Plaque d\'immatriculation: ${driverInfo?['numberplate']}'),
-            Text('Adresse MAC: ${driverInfo?['mac']}'),
-            // Ajoutez plus de champs selon vos besoins
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 //Partie Voyage qui vient de _sendPassengerResponseToServer
@@ -702,51 +772,29 @@ Future<void> checkForPassengers(String conducteurId) async {
   });
 }
 
+
+
 //Si un passagé est dans le voyage, on envoit un notif au conducteur pour l'informé et lui montrer le profil
-Future<void> _showConducteurNotification(
-    Map<String, dynamic> passengerInfo) async {
-  const AndroidNotificationDetails androidPlatformChannelSpecifics =
-      AndroidNotificationDetails('your_channel_id', 'your_channel_name',
-          importance: Importance.max, priority: Priority.high, showWhen: false);
-  const NotificationDetails platformChannelSpecifics =
-      NotificationDetails(android: androidPlatformChannelSpecifics);
-  await flutterLocalNotificationsPlugin.show(0, 'Passager Trouvé',
-      'Un passager a été trouvé pour votre voyage!', platformChannelSpecifics);
-}
-
-void onConducteurNotificationClick(Map<String, dynamic> passengerInfo) {
-  navigatorKey.currentState?.push(
-    MaterialPageRoute(
-      builder: (context) => PassengerInfoPage(passengerInfo: passengerInfo),
-    ),
+Future<void> _showConducteurNotification(Map<String, dynamic> passengerInfo) async {
+  var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
+    'channel_ID',
+    'channel_name',
+    importance: Importance.max,
+    priority: Priority.high,
+    ticker: 'ticker',
+    icon: 'icon_notification', // Référence à l'icône dans le dossier drawable
+    ongoing: true, // Rend la notification persistante
   );
-}
 
-//Page d'information du passager pour le conducteur
+  var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+  passengerInfo = passengerInfo;
+  print("notification conducteur send");
 
-class PassengerInfoPage extends StatelessWidget {
-  final Map<String, dynamic> passengerInfo;
-
-  const PassengerInfoPage({super.key, required this.passengerInfo});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Informations du Passager'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text('Nom: ${passengerInfo['name'] ?? 'Non disponible'}'),
-            Text('Email: ${passengerInfo['email'] ?? 'Non disponible'}'),
-            Text('Adresse: ${passengerInfo['address'] ?? 'Non disponible'}'),
-            Text('Téléphone: ${passengerInfo['phone'] ?? 'Non disponible'}'),
-            // Ajoutez plus de champs selon vos besoins
-          ],
-        ),
-      ),
-    );
-  }
+  await flutterLocalNotificationsPlugin.show(
+      2,
+      'Voyageur Trouvé',
+      'Tu peux aller chercher ${passengerInfo['name']} !',
+      platformChannelSpecifics,
+      payload: 'show_passenger_data'
+  );
 }
