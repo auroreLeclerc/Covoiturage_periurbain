@@ -4,27 +4,27 @@ import { PageEnforcedAuth } from "../PageEnforcedAuth.js";
 export default class History extends PageEnforcedAuth {
 	protected getExecution() {
 		this.database.getProfile(this.token.mail).then(role => {
-			const sql = role === "driver" ? "SELECT departure, arrival, `start` FROM travel WHERE mail=? AND `over`=?" : "SELECT driver, departure, arrival, `start` FROM travel INNER JOIN travel.id = passenger.travel_id WHERE passenger.mail=? AND `travel.over`=?";
+			const sql = role === "driver" ? " FROM travel WHERE mail=? AND `over`=?" : ", driver FROM travel INNER JOIN passenger ON travel.id=passenger.travel_id WHERE passenger.mail=? AND travel.over=?";
 			this.database.get(
-				sql,
-				[this.posted.mail, true]
+				"SELECT departure, arrival, `start`" + sql,
+				[this.token.mail, true]
 			).then(http => {
 				if (!http.body) {
 					this.transaction.sendStatus(http.code, http.message);
 				}
-				else this.transaction.response.end(JSON.stringify(http.body[0]));
+				else this.transaction.response.end(JSON.stringify(http.body));
 			});
 		});
 	}
 	protected postExecution() {
 		this.database.get(
-			"SELECT departure, arrival, `start` FROM travel WHERE mail=? AND `over`=?",
+			"SELECT departure, arrival, `start` FROM travel WHERE driver=? AND `over`=?",
 			[this.posted.driver, true]
 		).then(http => {
 			if (!http.body) {
 				this.transaction.sendStatus(http.code, http.message);
 			}
-			else this.transaction.response.end(JSON.stringify(http.body[0]));
+			else this.transaction.response.end(JSON.stringify(http.body));
 		});
 	}
 	protected putExecution() {
