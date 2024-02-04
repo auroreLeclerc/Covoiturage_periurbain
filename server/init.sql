@@ -45,6 +45,14 @@ CREATE TABLE travel (
 	`over` boolean DEFAULT false
 );
 
+CREATE TABLE travel_history (
+	`id` int PRIMARY KEY AUTO_INCREMENT,
+	`mail` VARCHAR(320) REFERENCES profile(mail) ON DELETE CASCADE,
+	`departure` VARCHAR(100) REFERENCES towns(`name`),
+	`arrival` VARCHAR(100) REFERENCES towns(`name`),
+	`start` datetime DEFAULT NULL
+);
+
 CREATE TABLE passenger (
 	`travel_id` int DEFAULT NULL REFERENCES travel(id),
 	`mail` VARCHAR(320) REFERENCES profile(mail) ON DELETE CASCADE,

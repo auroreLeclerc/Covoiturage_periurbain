@@ -17,14 +17,31 @@ export default class History extends PageEnforcedAuth {
 		});
 	}
 	protected postExecution() {
-		this.database.get(
-			"SELECT departure, arrival, `start` FROM travel WHERE driver=? AND `over`=?",
-			[this.posted.driver, true]
-		).then(http => {
-			if (!http.body) {
-				this.transaction.sendStatus(http.code, http.message);
+		this.database.getProfile(this.token.mail).then(role => {
+			switch (role) {
+			case "driver":
+				this.database.get(
+					"SELECT departure, arrival, `start` FROM travel WHERE driver=? AND `over`=?",
+					[this.posted.mail, true]
+				).then(http => {
+					if (!http.body) {
+						this.transaction.sendStatus(http.code, http.message);
+					}
+					else this.transaction.response.end(JSON.stringify(http.body));
+				});
+				break;
+			case "passenger":
+				this.database.get(
+					"SELECT departure, arrival, `start` FROM travel_history WHERE mail=?",
+					[this.posted.mail]
+				).then(http => {
+					if (!http.body) {
+						this.transaction.sendStatus(http.code, http.message);
+					}
+					else this.transaction.response.end(JSON.stringify(http.body));
+				});
+				break;
 			}
-			else this.transaction.response.end(JSON.stringify(http.body));
 		});
 	}
 	protected putExecution() {
