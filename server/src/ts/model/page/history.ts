@@ -42,6 +42,8 @@ export default class History extends PageEnforcedAuth {
 				});
 				break;
 			}
+		}).catch(error => {
+			this.transaction.sendStatus(httpCodes["Upgrade Required"], error.toString());
 		});
 	}
 	protected putExecution() {
