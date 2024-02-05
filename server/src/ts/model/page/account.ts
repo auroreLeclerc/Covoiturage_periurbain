@@ -10,7 +10,6 @@ export default class Account extends PageAuth {
 	}
 	private getExecution() {
 		this.database.getProfile(this.token.mail).then(role => {
-			if (role === null) this.transaction.sendStatus(httpCodes["Upgrade Required"]);
 			const select = role === "driver" ? ", numberplate, mac" : ", travel_id";
 			this.database.get(`SELECT ${role}.mail, role, name, town, phone ${select} FROM profile INNER JOIN ${role} ON profile.mail = ${role}.mail WHERE ${role}.mail = ?`, [this.token.mail]).then(http => {
 				if (!http.body) {
@@ -18,6 +17,8 @@ export default class Account extends PageAuth {
 				}
 				else this.transaction.response.end(JSON.stringify(http.body[0]));
 			});
+		}).catch(error => {
+			this.transaction.sendStatus(httpCodes["Upgrade Required"], error.toString());
 		});
 	}
 	/**
@@ -94,10 +95,9 @@ export default class Account extends PageAuth {
 							this.transaction.sendStatus(http2.code, http2.message);
 						});
 						break;
-					default:
-						this.transaction.sendStatus(httpCodes["Upgrade Required"]);
-						break;
 					}
+				}).catch(error => {
+					this.transaction.sendStatus(httpCodes["Upgrade Required"], error.toString());
 				});
 			}
 			else this.transaction.sendStatus(http.code, http.message);

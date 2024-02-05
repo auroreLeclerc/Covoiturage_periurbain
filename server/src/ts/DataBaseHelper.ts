@@ -127,8 +127,7 @@ export class DataBaseHelper {
 				return http.body[0].role;
 			}
 			else {
-				console.error(`${mail} has unset role ` + JSON.stringify(http));
-				return null;
+				throw new Error(`${mail} has unset role ` + JSON.stringify(http));
 			}
 		});
 	}
