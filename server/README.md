@@ -28,7 +28,7 @@ sudo systemctl start mariadb; mariadb --verbose -u user -p < 'init.sql'; npm ci 
     - GET: liste des villes avec arrêts
 - /history (authentifié)
     - GET: liste voyages terminés
-    - POST: liste des voyages terminés d'un driver (mail) -> mail:text
+    - POST: liste des voyages terminés d'un mail -> mail:text
 
 ![Diagramme de classe](./src/img/Diagramme_de_classe_cvp.png)
 ![Diagramme de séquence Interaction](./src/img/Diagramme_de_séquence_Interaction.png)
