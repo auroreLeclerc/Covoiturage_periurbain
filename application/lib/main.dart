@@ -147,7 +147,7 @@ class ApplicationAccueil extends State<Application> {
     };
     http
         .put(
-      Uri.parse('http://10.0.2.2:4443/account'),
+      Uri.parse('http://10.42.0.1:4443/account'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -172,7 +172,7 @@ class ApplicationAccueil extends State<Application> {
     //Connection et initialisation (update)
     http
         .post(
-      Uri.parse('http://10.0.2.2:4443/account'),
+      Uri.parse('http://10.42.0.1:4443/account'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -181,7 +181,7 @@ class ApplicationAccueil extends State<Application> {
         .then((response) {
       if (response.statusCode == 200) {
         globals.authToken = response.body;
-        http.get(Uri.parse('http://10.0.2.2:4443/account'),
+        http.get(Uri.parse('http://10.42.0.1:4443/account'),
             headers: <String, String>{
               'Content-Type':
               'application/json; charset=UTF-8',

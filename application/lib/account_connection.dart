@@ -67,7 +67,7 @@ class AccountConnectionState extends State<AccountConnection> {
                         "password": password,
                       };
                       http.post(
-                        Uri.parse('http://10.0.2.2:4443/account'),
+                        Uri.parse('http://10.42.0.1:4443/account'),
                         headers: <String, String>{
                           'Content-Type': 'application/json; charset=UTF-8',
                         },
@@ -78,7 +78,7 @@ class AccountConnectionState extends State<AccountConnection> {
                         if (response.statusCode == 200) {
                           globals.authToken = response.body;
                           http.get(
-                              Uri.parse('http://10.0.2.2:4443/account'),
+                              Uri.parse('http://10.42.0.1:4443/account'),
                               headers: <String, String>{
                                 'Content-Type': 'application/json; charset=UTF-8',
                                 'Authorization': globals.authToken

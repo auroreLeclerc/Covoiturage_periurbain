@@ -26,7 +26,7 @@ String ArretProche = "";
 
 Future<Map<String, dynamic>?> fetchUserData() async {
   final response = await http.get(
-    Uri.parse('http://10.0.2.2:4443/account'),
+    Uri.parse('http://10.42.0.1:4443/account'),
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
       'Authorization': authToken,
@@ -44,7 +44,7 @@ Future<Map<String, dynamic>?> fetchUserData() async {
 Future<List> getArretsFromServer() async {
   try {
     final response = await http.get(
-      Uri.parse('http://10.0.2.2:4443/stops'),
+      Uri.parse('http://10.42.0.1:4443/stops'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -96,22 +96,27 @@ void checkBluetoothAndStartScan() async {
 void _startPeriodicBluetoothScan(Map<String, dynamic>? userData) {
 
   // TEST Pour un passagé qui trouve un arrêt (pris au pif)
-  _sendNotificationPassager(listeArrets[1]);
+  //_sendNotificationPassager(listeArrets[1]);
 
   //TEST Pour un conducteur qui truve SA balise
   //_sendNotificationConducteur();
   //A DES FINS DE TESTS, LE SCAN DES BALISES EST DESACTIVE .
-  //_scanTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
-    //print("test");
-    //_startBluetoothScan(_userData);
-  //});
+  _scanTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+    print("test");
+    _startBluetoothScan(_userData);
+  });
 }
 
 
 void initializeNotifications() {
   var androidInitializationSettings = const AndroidInitializationSettings('icon_notification');
   var initializationSettings = InitializationSettings(android: androidInitializationSettings);
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
+  flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+      AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission();
 
+  print('initialisation notification');
   fltrNotification.initialize(
     initializationSettings,
     onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) {
@@ -149,7 +154,6 @@ void _startBluetoothScan(Map<String, dynamic>? userData) async {
     _scanSubscription = flutterBlue
         .scan(timeout: const Duration(seconds: 4))
         .listen((scanResult) {
-      print("role: " + userData?['role']);
       if (navigatorKey.currentState != null) {
         // Utilisation de GlobalKey
         ScaffoldMessenger.of(navigatorKey.currentState!.context).showSnackBar(
@@ -211,7 +215,7 @@ void _sendNotificationConducteur() async {
   var platformDetails = NotificationDetails(android: androidDetails);
 
   print("Envoie de la notification conducteur");
-
+  stopScan();
   await fltrNotification.show(
     0, // ID unique pour la notification, assurez-vous qu'il est unique pour chaque notification
     'Voulez vous covoiturer ?', // Titre de la notification
@@ -231,6 +235,7 @@ void _sendNotificationConducteur() async {
         icon: 'icon_notification', // Référence à l'icône dans le dossier drawable
       );
 
+      stopScan();
       var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
 
       String title = 'Arrêt Approchant 🚌'; // Exemple de titre
@@ -296,6 +301,7 @@ void _sendNotificationConducteur() async {
 
               if (nombrePassagers.isNotEmpty) {
                 // Envoyer les informations au serveur
+                stopScan();
                 _sendConducteurInfoToServer(depart, arrivee, int.parse(nombrePassagers));
               }
               Navigator.of(context).pop(); // Fermer le dialogue
@@ -305,7 +311,6 @@ void _sendNotificationConducteur() async {
       ),
     );
   }
-
   else if (payload == 'reponse_passager') {
     // Décoder le payload pour obtenir les informations de l'arrêt
     Map<String, dynamic> arret = jsonDecode(ArretProche);
@@ -341,13 +346,12 @@ void _sendNotificationConducteur() async {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.of(context).pop({'response': true, 'depart': arret['departure'].toString().toUpperCase(), 'arrivee': arret['arrival'].toString().toUpperCase()});
-            },
+            onPressed: () => Navigator.of(context).pop({'response': true, 'depart': arret['departure'].toString().toUpperCase(), 'arrivee': arret['arrival'].toString().toUpperCase()}),
             child: const Text('OUI'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              // Il n'est pas nécessaire de récupérer le résultat ici, car cette action ne retourne rien directement
               Navigator.of(context).pop({'response': false});
             },
             child: const Text('NON'),
@@ -355,71 +359,77 @@ void _sendNotificationConducteur() async {
         ],
       ),
     );
-    print(result);
-    if (result != null && result['response']) {
+
+    // Vérifier le résultat après la fermeture de la boîte de dialogue
+    if (result != null && result['response'] == true) {
       // L'utilisateur a appuyé sur "OUI" et a fourni des informations
       print("ok");
+      stopScan();
       await _sendPassengerResponseToServer(_userData, result['depart'], result['arrivee']);
     }
   }
+
   else if (payload == 'show_passenger_data') {
+    passengerInfo?['history'] = [];
     try {
-      var response = await http.post(
-        Uri.parse('http://10.0.2.2:4443/history'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode({
-          'mail': passengerInfo?['mail'],
-        }),
-      );
-      print("history");
-      print(response.statusCode);
-      if (response.statusCode == 200) {
-        // Convertir la réponse JSON en liste
-        var historyList = jsonDecode(response.body) as List;
-        passengerInfo?['history'] = historyList;
-      } else {
-        print('Erreur lors du démarrage du voyage: ${response.body}');
+      if(passengerInfo?['mail'] != null) {
+        var response = await http.post(
+          Uri.parse('http://10.42.0.1:4443/history'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': authToken,
+          },
+          body: jsonEncode({
+            'mail': passengerInfo?['mail'],
+          }),
+        );
+        print("history");
+        print(response.statusCode);
+        if (response.statusCode == 200) {
+          var historyList = jsonDecode(response.body) as List;
+          passengerInfo?['history'] = historyList;
+        } else {
+          print('Erreur lors du démarrage du voyage: ${response.body}');
+        }
       }
     } catch (e) {
       print('Erreur lors de l\'envoi du démarrage du voyage: $e');
     }
 
-// Afficher une boîte de dialogue avec les informations du conducteur et l'historique des voyages
+    // Afficher une boîte de dialogue avec les informations du passager et l'historique des voyages
     await showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Information Passager'),
           content: SingleChildScrollView(
-            child: ListBody(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('Nom: ${passengerInfo?['name']}'),
-                Text('Email: ${passengerInfo?['driver']}'),
-                // Ici, nous utilisons un ListView.builder pour créer la liste scrollable
-                SizedBox(
-                  height: 200, // Définissez une hauteur fixe pour le conteneur
-                  child: ListView.builder(
-                    itemCount: passengerInfo?['history']?.length ?? 0,
-                    itemBuilder: (context, index) {
-                      var historyItem = passengerInfo?['history'][index];
-                      return ListTile(
-                        title: Text("${historyItem['departure']} -> ${historyItem['arrival']}"),
-                        subtitle: Text("Date: ${historyItem['registered']}"),
-                      );
-                    },
+                Text('Email: ${passengerInfo?['mail']}'),
+                if (passengerInfo?['history']?.isNotEmpty ?? false)
+                  Container(
+                    height: 100,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: passengerInfo?['history']?.length ?? 0,
+                      itemBuilder: (context, index) {
+                        var historyItem = passengerInfo?['history'][index];
+                        return ListTile(
+                          title: Text("${historyItem['departure']} -> ${historyItem['arrival']}"),
+                          subtitle: Text("Date: ${historyItem['registered']}"),
+                        );
+                      },
+                    ),
                   ),
-                ),
               ],
             ),
           ),
           actions: <Widget>[
             TextButton(
               child: const Text('Fermer'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
             ),
           ],
         );
@@ -430,9 +440,10 @@ void _sendNotificationConducteur() async {
   else if (payload == 'show_conducteur_data') {
     try {
       var response = await http.post(
-        Uri.parse('http://10.0.2.2:4443/history'),
+        Uri.parse('http://10.42.0.1:4443/history'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': authToken,
         },
         body: jsonEncode({
           'mail': driverInfo?['mail'],
@@ -441,7 +452,6 @@ void _sendNotificationConducteur() async {
       print("history");
       print(response.statusCode);
       if (response.statusCode == 200) {
-        // Convertir la réponse JSON en liste
         var historyList = jsonDecode(response.body) as List;
         driverInfo?['history'] = historyList;
       } else {
@@ -451,10 +461,16 @@ void _sendNotificationConducteur() async {
       print('Erreur lors de l\'envoi du démarrage du voyage: $e');
     }
 
-// Afficher une boîte de dialogue avec les informations du conducteur et l'historique des voyages
+    // Modification ici
     await showDialog<void>(
       context: context,
       builder: (BuildContext context) {
+        // Vérifier si l'historique est vide ou non
+        bool isHistoryEmpty = driverInfo?['history']?.isEmpty ?? true;
+
+        print('historique');
+        print(isHistoryEmpty);
+
         return AlertDialog(
           title: const Text('Information Conducteur'),
           content: SingleChildScrollView(
@@ -463,20 +479,24 @@ void _sendNotificationConducteur() async {
                 Text('Nom: ${driverInfo?['name']}'),
                 Text('Email: ${driverInfo?['driver']}'),
                 Text('Plaque: ${driverInfo?['numberplate']}'),
-                // Ici, nous utilisons un ListView.builder pour créer la liste scrollable
-                SizedBox(
-                  height: 200, // Définissez une hauteur fixe pour le conteneur
-                  child: ListView.builder(
-                    itemCount: driverInfo?['history']?.length ?? 0,
-                    itemBuilder: (context, index) {
-                      var historyItem = driverInfo?['history'][index];
-                      return ListTile(
-                        title: Text("${historyItem['departure']} -> ${historyItem['arrival']}"),
-                        subtitle: Text("Date: ${historyItem['registered']}"),
-                      );
-                    },
+                Text('Historique :'),
+                // Conditionnellement afficher le SizedBox uniquement si l'historique n'est pas vide
+                if (!isHistoryEmpty)
+                  SizedBox(
+                    height: 200, // Hauteur fixe pour le conteneur ListView.builder
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: driverInfo?['history']?.length ?? 0,
+                      itemBuilder: (context, index) {
+                        var historyItem = driverInfo?['history'][index];
+                        return ListTile(
+                          title: Text("${historyItem['departure']} -> ${historyItem['arrival']}"),
+                          subtitle: Text("Date: ${historyItem['date']}"),
+                        );
+                      },
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -491,7 +511,9 @@ void _sendNotificationConducteur() async {
         );
       },
     );
+
   }
+
 
 }
 
@@ -503,7 +525,7 @@ Future<void> _sendPassengerResponseToServer(Map<String, dynamic>? userData ,Stri
     Timer.periodic(const Duration(seconds: 10), (Timer timer) async {
         // Inscrire le passager à un voyage
         var response = await http.post(
-          Uri.parse('http://10.0.2.2:4443/match'),
+          Uri.parse('http://10.42.0.1:4443/match'),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
             'Authorization': authToken,
@@ -643,7 +665,7 @@ Future<bool> scanForConducteur(String adresseMACConducteur) async {
 Future<void> _sendVoyageStart(String adresseMACConducteur) async {
   try {
     var response = await http.patch(
-      Uri.parse('http://10.0.2.2:4443/state'),
+      Uri.parse('http://10.42.0.1:4443/state'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': authToken,
@@ -685,7 +707,7 @@ Future<void> _sendVoyageEnd() async {
   try {
     print("FIN DU VOYAGE !");
     var response = await http.delete(
-      Uri.parse('http://10.0.2.2:4443/state'),
+      Uri.parse('http://10.42.0.1:4443/state'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': authToken,
@@ -732,7 +754,7 @@ Future<void> _sendConducteurInfoToServer(String departure, String arrival, int p
 
     // Envoyer les informations au serveur
     await http.put(
-      Uri.parse('http://10.0.2.2:4443/travel'),
+      Uri.parse('http://10.42.0.1:4443/travel'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': authToken,
@@ -746,24 +768,39 @@ Future<void> _sendConducteurInfoToServer(String departure, String arrival, int p
   } catch (e) {
     print('Erreur lors de l\'envoi des informations de passager: $e');
   }
+
+  checkForPassengers();
 }
 
 //requête répétitive pour savoir si un passagé s'est inscrit au voyage
-Future<void> checkForPassengers(String conducteurId) async {
-  Timer.periodic(const Duration(seconds: 5), (Timer timer) async {
-    var response = await http.post(
-      Uri.parse('http://10.0.2.2:4443/travel'),
+Future<void> checkForPassengers() async {
+  // Définir le Timer en dehors pour pouvoir l'annuler plus tard
+  Timer? timer;
+
+  timer = Timer.periodic(const Duration(seconds: 5), (Timer t) async {
+    print("Scan for passager");
+    var response = await http.get(
+      Uri.parse('http://10.42.0.1:4443/travel'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': authToken,
       },
-      body: jsonEncode({'conducteurId': conducteurId}),
     );
-
+    print("POST :TRAVEL");
+    print(response.statusCode);
+    print(jsonDecode(response.body));
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
-      if (data != null && data['passengerFound']) {
-        _showConducteurNotification(data['passengerInfo']);
-        timer.cancel(); // Arrêter le timer si un passager est trouvé
+      print("information du passagé");
+      print(data);
+      if (data[0]?['mail'] != null) {
+        // Si un passager est trouvé, affichez la notification
+        _showConducteurNotification(data[0]!);
+
+        // Et annulez le Timer pour arrêter la boucle
+        if (timer != null) {
+          timer.cancel();
+        }
       }
     } else {
       print('Erreur lors de la vérification des passagers: ${response.body}');
@@ -773,8 +810,9 @@ Future<void> checkForPassengers(String conducteurId) async {
 
 
 
+
 //Si un passagé est dans le voyage, on envoit un notif au conducteur pour l'informé et lui montrer le profil
-Future<void> _showConducteurNotification(Map<String, dynamic> passengerInfo) async {
+Future<void> _showConducteurNotification(Map<String, dynamic> passengerInfoFromServeur) async {
   var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
     'channel_ID',
     'channel_name',
@@ -786,13 +824,13 @@ Future<void> _showConducteurNotification(Map<String, dynamic> passengerInfo) asy
   );
 
   var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
-  passengerInfo = passengerInfo;
+  passengerInfo = passengerInfoFromServeur;
   print("notification conducteur send");
 
   await flutterLocalNotificationsPlugin.show(
       2,
       'Voyageur Trouvé',
-      'Tu peux aller chercher ${passengerInfo['name']} !',
+      'Tu peux aller chercher ${passengerInfo?['name']} !',
       platformChannelSpecifics,
       payload: 'show_passenger_data'
   );

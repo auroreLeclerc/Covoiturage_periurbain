@@ -43,7 +43,7 @@ dependencies:
   geolocator: ^10.1.0
   url_launcher: ^6.0.12
   flutter_blue: ^0.8.0 # Utilisez la dernière version compatible avec null safety
-  flutter_local_notifications: ^16.1.0
+  flutter_local_notifications: ^16.3.2
   permission_handler: ^11.0.0
   flutter_background: ^1.2.0
 
