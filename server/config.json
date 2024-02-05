@@ -6,7 +6,7 @@
 			"port": 4443
 		},
 		"database": {
-			"host": "localhost",
+			"host": "127.0.0.1",
 			"user": "user",
 			"password": "user"
 		}
