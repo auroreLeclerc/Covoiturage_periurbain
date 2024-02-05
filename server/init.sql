@@ -35,7 +35,7 @@ CREATE TABLE driver (
 );
 
 CREATE TABLE travel (
-	`id` int PRIMARY KEY AUTO_INCREMENT,
+	`id` int PRIMARY KEY,
 	`driver` VARCHAR(320) REFERENCES driver(mail) ON DELETE CASCADE,
 	`departure` VARCHAR(100) REFERENCES towns(`name`),
 	`arrival` VARCHAR(100) REFERENCES towns(`name`),

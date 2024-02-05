@@ -33,14 +33,14 @@ export default class State extends PageEnforcedAuth {
 					if (!httpTravelId.body) this.transaction.sendStatus(httpTravelId.code, httpTravelId.message);
 					else {
 						this.database.set(
-							"UPDATE passenger SET travel_id=NULL AND travelling=? WHERE travel_id=?",
-							[false, httpTravelId.body[0].travel_id]
+							"UPDATE passenger SET travel_id=?, travelling=? WHERE travel_id=?",
+							[null, false, httpTravelId.body[0].travel_id]
 						).then(http =>{
 							this.transaction.sendStatus(http.code, http.message);
 						});
 						this.database.set(
-							"UPDATE travel SET `over`=? WHERE id=? AND `over`=?",
-							[true, httpTravelId.body[0].travel_id, true]
+							"UPDATE travel SET `over`=? WHERE id=?",
+							[true, httpTravelId.body[0].travel_id]
 						);
 						this.database.get(
 							"SELECT `departure`, `arrival`, `start` FROM travel WHERE id=?",

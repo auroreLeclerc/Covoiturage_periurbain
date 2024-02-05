@@ -4,9 +4,9 @@ import { PageEnforcedAuth } from "../PageEnforcedAuth.js";
 export default class History extends PageEnforcedAuth {
 	protected getExecution() {
 		this.database.getProfile(this.token.mail).then(role => {
-			const sql = role === "driver" ? " FROM travel WHERE mail=? AND `over`=?" : ", driver FROM travel INNER JOIN passenger ON travel.id=passenger.travel_id WHERE passenger.mail=? AND travel.over=?";
+			const sql = role === "driver" ? "FROM travel WHERE mail=? AND `over`=?" : "FROM travel_history WHERE mail=?";
 			this.database.get(
-				"SELECT departure, arrival, `start`" + sql,
+				"SELECT departure, arrival, `start` " + sql,
 				[this.token.mail, true]
 			).then(http => {
 				if (!http.body) {
@@ -17,7 +17,7 @@ export default class History extends PageEnforcedAuth {
 		});
 	}
 	protected postExecution() {
-		this.database.getProfile(this.token.mail).then(role => {
+		this.database.getProfile(this.posted.mail).then(role => {
 			switch (role) {
 			case "driver":
 				this.database.get(

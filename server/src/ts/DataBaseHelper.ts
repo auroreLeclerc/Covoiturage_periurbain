@@ -34,7 +34,7 @@ export class DataBaseHelper {
 	/**
 	 * @throws {mariadb.SqlError} Check if the mariadb service is started or if the connection credentials are correct
 	 */
-	start(): Promise<string> {
+	async start(): Promise<string> {
 		return mariadb.createConnection({
 			host: this.host,
 			user: this.user,
@@ -46,7 +46,7 @@ export class DataBaseHelper {
 		});
 	}
 
-	set(request: string, values: unknown[]): Promise<HttpResponseStatusCodes> {
+	async set(request: string, values: unknown[]): Promise<HttpResponseStatusCodes> {
 		for (let i = 0; i < values.length; i++) {
 			values[i] = values[i] ?? null;
 		}
@@ -88,7 +88,7 @@ export class DataBaseHelper {
 		});
 	}
 
-	get(request: string, values: unknown[]): Promise<HttpResponseStatusCodesWithArrayBody> {
+	async get(request: string, values: unknown[]): Promise<HttpResponseStatusCodesWithArrayBody> {
 		return this.connection.query(request, values).then(rows => {
 			if (Array.isArray(rows)) {
 				return {
@@ -121,7 +121,7 @@ export class DataBaseHelper {
 		});
 	}
 
-	getProfile(mail: string) {
+	async getProfile(mail: string) {
 		return this.get("SELECT role FROM cvp.profile WHERE mail = ?", [mail]).then(http => {
 			if (http.body?.length && (http.body[0].role === "driver" || http.body[0].role === "passenger")) {
 				return http.body[0].role;
