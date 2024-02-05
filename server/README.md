@@ -1,7 +1,7 @@
 # Covoiturage périurbain côté serveur
 ## Développé avec NodeJS LTS v18.17.1 et MariaDB v11.1.2 :
 ```bash
-sudo systemctl start mariadb; mariadb --verbose -u user -p < 'init.sql'; npm ci --omit=dev; npm install -g 'typescript'; npm start
+sudo systemctl start mariadb; mariadb --verbose -u user -p < 'init.sql'; npm ci --omit=dev; npm start
 ```
 ## La configuration du serveur et de la connexion à la BDD se fait dans ./config.json
 ### J'utilise les credentials user:user sur la databse cvp [(documentation)](https://wiki.archlinux.org/title/MariaDB#Add_user)
