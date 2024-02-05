@@ -43,13 +43,13 @@ export default class State extends PageEnforcedAuth {
 							[true, httpTravelId.body[0].travel_id, true]
 						);
 						this.database.get(
-							"SELECT `departure`, `arrival`, `start` FROM passenger WHERE mail=?",
-							[this.token.mail]
+							"SELECT `departure`, `arrival`, `start` FROM travel WHERE id=?",
+							[httpTravelId.body[0].travel_id]
 						).then(http => {
 							if (!http.body?.length) throw new Error(JSON.stringify(http));
 							else {
 								this.database.set(
-									"INSERT INTO driver(`mail`, `departure`, `arrival`, `start`) VALUES(?, ?, ?, ?)",
+									"INSERT INTO travel_history(`mail`, `departure`, `arrival`, `start`) VALUES(?, ?, ?, ?)",
 									[this.token.mail, http.body[0].departure, http.body[0].arrival, http.body[0].start]
 								);
 							}
