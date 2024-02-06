@@ -409,7 +409,7 @@ void _sendNotificationConducteur() async {
               children: <Widget>[
                 Text('Email: ${passengerInfo?['mail']}'),
                 if (passengerInfo?['history']?.isNotEmpty ?? false)
-                  Container(
+                  SizedBox(
                     height: 100,
                     child: ListView.builder(
                       shrinkWrap: true,
@@ -479,14 +479,14 @@ void _sendNotificationConducteur() async {
                 Text('Nom: ${driverInfo?['name']}'),
                 Text('Email: ${driverInfo?['driver']}'),
                 Text('Plaque: ${driverInfo?['numberplate']}'),
-                Text('Historique :'),
+                const Text('Historique :'),
                 // Conditionnellement afficher le SizedBox uniquement si l'historique n'est pas vide
                 if (!isHistoryEmpty)
                   SizedBox(
                     height: 200, // Hauteur fixe pour le conteneur ListView.builder
                     child: ListView.builder(
                       shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
+                      physics: const NeverScrollableScrollPhysics(),
                       itemCount: driverInfo?['history']?.length ?? 0,
                       itemBuilder: (context, index) {
                         var historyItem = driverInfo?['history'][index];
